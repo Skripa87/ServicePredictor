@@ -10,6 +10,9 @@ namespace ServicePredictor.Controllers
     {
         public ActionResult Index()
         {
+            var ftpManager = new FtpDataManager("ftp://92.50.187.210:21//bus1", "ftpuser", "Ln8#{T7nRsmd");
+            var busRouteManager = new BusRouteManager(ftpManager.GetData());
+            busRouteManager.CreateBusRoute();
             return View();
         }
 

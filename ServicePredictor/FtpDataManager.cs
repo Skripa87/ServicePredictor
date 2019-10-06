@@ -6,6 +6,7 @@ using System.Web;
 using ServicePredictor.Models;
 using System.IO;
 using System.Xml;
+using System.Threading;
 
 namespace ServicePredictor
 {
@@ -36,14 +37,15 @@ namespace ServicePredictor
 
         private List<FtpFileDataElement> GetUniqueElements(List<FtpFileDataElement> ftpFileDataElements)
         {
+            if (ftpFileDataElements == null) return null;
             var uniqueElements = new List<FtpFileDataElement>();
             foreach (var item in ftpFileDataElements)
             {
-                if(!uniqueElements.Any(f=>f.BusRouteName.Equals(item.BusRouteName) 
-                                       && f.CarNumber.Equals(item.CarNumber)
-                                       && f.Azimuth.Equals(item.Azimuth) 
-                                       && f.Latitude.Equals(item.Latitude) 
-                                       && f.Longitude.Equals(item.Longitude)))
+                if (!uniqueElements.Any(f => f.BusRouteName.Equals(item.BusRouteName)
+                                        && f.CarNumber.Equals(item.CarNumber)
+                                        && f.Azimuth.Equals(item.Azimuth)
+                                        && f.Latitude.Equals(item.Latitude)
+                                        && f.Longitude.Equals(item.Longitude)))
                 {
                     uniqueElements.Add(item);
                 }
@@ -51,7 +53,7 @@ namespace ServicePredictor
             return uniqueElements;
         }
 
-        public List<FtpFileDataElement> GetData(string fileName)
+        private List<FtpFileDataElement> GetPreData(string fileName)
         {
             StringReader reader = null;
             var ftpFileDataElements = new List<FtpFileDataElement>();
@@ -105,7 +107,66 @@ namespace ServicePredictor
                 return null;
             }
             return ftpFileDataElements;
-        }        
+        }
+
+        public List<FtpFileDataElement> GetData()
+        {
+            var result = new List<FtpFileDataElement>();
+            var targetDate = DateTime.Now
+                                     .AddDays(-1)
+                                     .AddHours(-1 * DateTime.Now.Hour)
+                                     .AddMinutes(-1 * DateTime.Now.Minute)
+                                     .AddSeconds(-1 * DateTime.Now.Second);
+            int coreCount = Environment.ProcessorCount;
+            int coreWeight = 1440 / coreCount;
+            List<FtpFileDataElement>[] fileDataElementsArrResult = new List<FtpFileDataElement>[coreCount]; 
+            for (int i = 0; i < coreCount; i++)
+            {
+                String k = i.ToString();
+                lock (k)
+                {
+                    
+                    Thread thread = new Thread(() => 
+                    {
+                        fileDataElementsArrResult[(int.TryParse(k,out var knum) ? knum : 0)] = 
+                        ThreadGetData(coreWeight, targetDate.AddMinutes(coreWeight * (int.TryParse(k,out var knum2) 
+                                                                                     ? knum2 
+                                                                                     : 0))); });
+                    thread.Start();
+                }
+            }
+            while (fileDataElementsArrResult.ToList().Any(f => f == null)) { }
+            for(int i = 0; i < coreCount; i++)
+            {
+                result.AddRange(fileDataElementsArrResult[i]);
+            }
+            return result;
+        }
+
+        public List<FtpFileDataElement>ThreadGetData(int coreWeight, DateTime targetDate)
+        {
+            var result = new List<FtpFileDataElement>();
+            var endDate = targetDate.AddMinutes(coreWeight);
+            lock (result)
+            {
+                while (!targetDate.Hour.Equals(endDate.Hour) && targetDate.Minute.Equals(endDate.Minute))
+                {
+                    var fileName = "//" + targetDate.ToString("yyyy") + "_" +
+                                   targetDate.ToString("MM") +
+                                   "//" + targetDate.ToString("yyyy") + "_"
+                                        + targetDate.ToString("MM") + "_"
+                                        + targetDate.ToString("dd") + "//"
+                                        + "Otmetki_" + targetDate.ToString("yyyy") + "_"
+                                        + targetDate.ToString("MM") + "_"
+                                        + targetDate.ToString("dd") + "_"
+                                        + targetDate.ToString("HH") + "_"
+                                        + targetDate.ToString("mm") + ".xml";
+                    result.AddRange(GetUniqueElements(GetPreData(fileName)) ?? new List<FtpFileDataElement>());
+                    targetDate = targetDate.AddMinutes(1);
+                }
+                return result;
+            }
+        }
 
         public FtpDataManager(string ftpPath, string user, string password)
         {

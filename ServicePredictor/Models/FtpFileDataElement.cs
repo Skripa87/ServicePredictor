@@ -19,71 +19,37 @@ namespace ServicePredictor.Models
 
         public FtpFileDataElement(string garagNum, string marsh, string graph, string smena, string timenav, string latitude, string longitude, string speed, string azimuth)
         {
-            if (int.TryParse(garagNum,out var garagNumNum))
-            {
-                CarNumber = garagNumNum;
-            }
-            else
-            {
-                CarNumber = 0;
-            }
+            CarNumber = int.TryParse(garagNum, out var garagNumNum)
+                      ? garagNumNum
+                      : 0;
             BusRouteName = marsh;
-            if (int.TryParse(graph, out var graphNum))
-            {
-                WorkGraph = graphNum;
-            }
-            else
-            {
-                WorkGraph = 0;
-            }
-            if(int.TryParse(smena, out var numSmena))
-            {
-                WorkSmena = numSmena;
-            }
-            else
-            {
-                WorkSmena = 0;
-            }
-            if(DateTime.TryParse(timenav,out var dateTime))
-            {
-                TimePoint = dateTime;
-            }
-            else
-            {
-                TimePoint = DateTime.MinValue;
-            }
-            if(double.TryParse(latitude,out var latitudeNum))
-            {
-                Latitude = latitudeNum;
-            }
-            else
-            {
-                Latitude = 0;
-            }
-            if(double.TryParse(longitude, out var longitudeNum))
-            {
-                Longitude = longitudeNum;
-            }
-            else
-            {
-                Longitude = 0;
-            }
-            if (double.TryParse(speed, out var speedNum))
-            {
-                Speed = speedNum;
-            }
-            else
-            {
-                Speed = 0;
-            }
-            if(int.TryParse(azimuth,out var azimuthNum))
-            {
-                Azimuth = azimuthNum;
-            }
-            else
-            {
-                Azimuth = 0;
-            }
+            WorkGraph = int.TryParse(graph, out var graphNum)
+                      ? graphNum
+                      : 0;
+            WorkSmena = int.TryParse(smena, out var numSmena) 
+                      ? numSmena
+                      : 0;
+            TimePoint = DateTime.TryParse(timenav,out var dateTime)
+                      ? dateTime
+                      : DateTime.MinValue;
+            Latitude = double.TryParse(latitude, out var latitudeNum)
+                     ? latitudeNum
+                     : (double.TryParse(latitude.Replace(',', '.'), out var result)
+                       ? result
+                       : 0);
+            Longitude = double.TryParse(longitude, out var longitudeNum)
+                     ? longitudeNum
+                     : (double.TryParse(latitude.Replace(',', '.'), out var longitudeN)
+                       ? longitudeN
+                       : 0);
+            Speed = double.TryParse(speed, out var speedNum)
+                  ? speedNum
+                  : (double.TryParse(speed.Replace(',','.'), out var speedN)
+                    ? speedN
+                    : 0);
+            Azimuth = int.TryParse(azimuth,out var azimuthNum)
+                    ? azimuthNum
+                    : 0;            
         }
     }
 }
