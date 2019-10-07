@@ -10,6 +10,20 @@ using System.Threading;
 
 namespace ServicePredictor
 {
+    public class TimerFtpDataManager 
+    {
+        public DateTime Start { get; set; }
+        public DateTime End { get; set; }
+        public int NumberCore { get; set; }
+
+        public TimerFtpDataManager(DateTime start, DateTime end, int numberCore)
+        {
+            Start = start;
+            End = end;
+            NumberCore = numberCore;
+        }
+    }
+    
     public class FtpDataManager
     {
         public string FtpPath { get; set; }
@@ -138,17 +152,28 @@ namespace ServicePredictor
             BusRoutesBuffer = new List<BusRouteBuffer>[coreCount];
             for (int i = 0; i < coreCount; i++)
             {
-                threads[i] = new Thread(() => {BusRoutesBuffer[i] = ThreadGetData() });
-                threads[i].Start();
+                var start = targetDate.AddMinutes(i * coreWeight);
+                var end = start.AddMinutes(coreWeight);
+                var timer = new TimerFtpDataManager(start, end, i);
+                threads[i] = new Thread(new ParameterizedThreadStart(ThreadGetData));
+                threads[i].Start(timer);
                 threads[i].Join();
+            }
+
+            foreach (var item in BusRoutesBuffer)
+            {
+                result.AddRange(item);
             }
             return result;
         }
 
-        public List<BusRouteBuffer> ThreadGetData(DateTime currentDate, DateTime endDate)
+        public void ThreadGetData(object timer)
         {
+            if (timer == null) return;
+            var currentDate = ((TimerFtpDataManager)timer).Start;
+            var endDate = ((TimerFtpDataManager)timer).End;
             var result = new List<BusRouteBuffer>();
-            while (!currentDate.Hour.Equals(endDate.Hour) && currentDate.Minute.Equals(endDate.Minute))
+            while (!currentDate.Equals(endDate))
             {
                 var fileName = "//" + currentDate.ToString("yyyy") + "_" +
                                currentDate.ToString("MM") +
@@ -160,9 +185,10 @@ namespace ServicePredictor
                                     + currentDate.ToString("dd") + "_"
                                     + currentDate.ToString("HH") + "_"
                                     + currentDate.ToString("mm") + ".xml";
-                targetDate = targetDate.AddMinutes(1);
+                result.AddRange(GetPartData(fileName) ?? new List<BusRouteBuffer>());
+                currentDate = currentDate.AddMinutes(1);
             }
-            return result;
+            BusRoutesBuffer[((TimerFtpDataManager)timer).NumberCore] = result;
         }
 
         public FtpDataManager(string ftpPath, string user, string password)
