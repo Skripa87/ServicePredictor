@@ -15,14 +15,14 @@ namespace ServicePredictor
         public string FtpPath { get; set; }
         private string UserName { get; set; }
         private string Password { get; set; }
-
+        private static List<BusRouteBuffer>[] BusRoutesBuffer { get; set; }
         private string ReadFileToString(string fileName)
         {
-            string result = "";
             var request = new WebClient();
             string url = FtpPath + fileName;
             request.Credentials = new NetworkCredential(UserName, Password);
 
+            string result;
             try
             {
                 byte[] newFileData = request.DownloadData(url);
@@ -35,28 +35,11 @@ namespace ServicePredictor
             return result;
         }
 
-        private List<FtpFileDataElement> GetUniqueElements(List<FtpFileDataElement> ftpFileDataElements)
+        private List<BusRouteBuffer> GetPartData(string fileName)
         {
-            if (ftpFileDataElements == null) return null;
-            var uniqueElements = new List<FtpFileDataElement>();
-            foreach (var item in ftpFileDataElements)
-            {
-                if (!uniqueElements.Any(f => f.BusRouteName.Equals(item.BusRouteName)
-                                        && f.CarNumber.Equals(item.CarNumber)
-                                        && f.Azimuth.Equals(item.Azimuth)
-                                        && f.Latitude.Equals(item.Latitude)
-                                        && f.Longitude.Equals(item.Longitude)))
-                {
-                    uniqueElements.Add(item);
-                }
-            }
-            return uniqueElements;
-        }
-
-        private List<FtpFileDataElement> GetPreData(string fileName)
-        {
-            StringReader reader = null;
-            var ftpFileDataElements = new List<FtpFileDataElement>();
+            var buses = new List<BusCrew>();
+            var busRoutes = new List<BusRouteBuffer>();
+            StringReader reader;
             try
             {
                 reader = new StringReader(ReadFileToString(fileName));
@@ -98,7 +81,39 @@ namespace ServicePredictor
                                 case "Azimuth": azimuth = attr.Value; break;
                             }
                         }
-                        ftpFileDataElements.Add(new FtpFileDataElement(garageNum, marsh, graph, smena, timenav, latitude, longitude, speed, azimuth));
+                        var busRoute = new BusRouteBuffer(marsh);
+                        var busCrew = new BusCrew(garageNum, smena, graph);
+                        if (busRoutes.Contains(busRoute))
+                        {
+                            var busRouteIndex = busRoutes.IndexOf(busRoutes.Find(b => b.BusRouteName.Equals(marsh)));
+                            if (busRoutes.ElementAt(busRouteIndex)
+                                         .BusesBuffer
+                                         .Contains(busCrew))
+                            {
+                                var busCrewIndex = busRoutes.ElementAt(busRouteIndex)
+                                                            .BusesBuffer.IndexOf(busRoutes.ElementAt(busRouteIndex)
+                                                            .BusesBuffer
+                                                            .Find(f => f.CarNumber.Equals(garageNum) &&
+                                                                       f.Sheduler.Equals(graph) &&
+                                                                       f.Turn.Equals(smena)));
+                                busRoutes.ElementAt(busRouteIndex)
+                                         .BusesBuffer
+                                         .ElementAt(busCrewIndex)
+                                         .InsertPoint(latitude, longitude, timenav, azimuth, speed);
+                            }
+                            else
+                            {
+                                busCrew.InsertPoint(latitude, longitude, timenav, azimuth, speed);
+                                busRoutes.ElementAt(busRouteIndex)
+                                         .InsertBuses(busCrew);
+                            }
+                        }
+                        else
+                        {
+                            busCrew.InsertPoint(latitude, longitude, timenav, azimuth, speed);
+                            busRoute.InsertBuses(busCrew);
+                            busRoutes.Add(busRoute);
+                        }
                     }
                 }
             }
@@ -106,12 +121,12 @@ namespace ServicePredictor
             {
                 return null;
             }
-            return ftpFileDataElements;
+            return busRoutes;
         }
 
-        public List<FtpFileDataElement> GetData()
+        public List<BusRouteBuffer> GetData()
         {
-            var result = new List<FtpFileDataElement>();
+            var result = new List<BusRouteBuffer>();
             var targetDate = DateTime.Now
                                      .AddDays(-1)
                                      .AddHours(-1 * DateTime.Now.Hour)
@@ -119,53 +134,35 @@ namespace ServicePredictor
                                      .AddSeconds(-1 * DateTime.Now.Second);
             int coreCount = Environment.ProcessorCount;
             int coreWeight = 1440 / coreCount;
-            List<FtpFileDataElement>[] fileDataElementsArrResult = new List<FtpFileDataElement>[coreCount]; 
+            var threads = new Thread[coreCount];
+            BusRoutesBuffer = new List<BusRouteBuffer>[coreCount];
             for (int i = 0; i < coreCount; i++)
             {
-                String k = i.ToString();
-                lock (k)
-                {
-                    
-                    Thread thread = new Thread(() => 
-                    {
-                        fileDataElementsArrResult[(int.TryParse(k,out var knum) ? knum : 0)] = 
-                        ThreadGetData(coreWeight, targetDate.AddMinutes(coreWeight * (int.TryParse(k,out var knum2) 
-                                                                                     ? knum2 
-                                                                                     : 0))); });
-                    thread.Start();
-                }
-            }
-            while (fileDataElementsArrResult.ToList().Any(f => f == null)) { }
-            for(int i = 0; i < coreCount; i++)
-            {
-                result.AddRange(fileDataElementsArrResult[i]);
+                threads[i] = new Thread(() => {BusRoutesBuffer[i] = ThreadGetData() });
+                threads[i].Start();
+                threads[i].Join();
             }
             return result;
         }
 
-        public List<FtpFileDataElement>ThreadGetData(int coreWeight, DateTime targetDate)
+        public List<BusRouteBuffer> ThreadGetData(DateTime currentDate, DateTime endDate)
         {
-            var result = new List<FtpFileDataElement>();
-            var endDate = targetDate.AddMinutes(coreWeight);
-            lock (result)
+            var result = new List<BusRouteBuffer>();
+            while (!currentDate.Hour.Equals(endDate.Hour) && currentDate.Minute.Equals(endDate.Minute))
             {
-                while (!targetDate.Hour.Equals(endDate.Hour) && targetDate.Minute.Equals(endDate.Minute))
-                {
-                    var fileName = "//" + targetDate.ToString("yyyy") + "_" +
-                                   targetDate.ToString("MM") +
-                                   "//" + targetDate.ToString("yyyy") + "_"
-                                        + targetDate.ToString("MM") + "_"
-                                        + targetDate.ToString("dd") + "//"
-                                        + "Otmetki_" + targetDate.ToString("yyyy") + "_"
-                                        + targetDate.ToString("MM") + "_"
-                                        + targetDate.ToString("dd") + "_"
-                                        + targetDate.ToString("HH") + "_"
-                                        + targetDate.ToString("mm") + ".xml";
-                    result.AddRange(GetUniqueElements(GetPreData(fileName)) ?? new List<FtpFileDataElement>());
-                    targetDate = targetDate.AddMinutes(1);
-                }
-                return result;
+                var fileName = "//" + currentDate.ToString("yyyy") + "_" +
+                               currentDate.ToString("MM") +
+                               "//" + currentDate.ToString("yyyy") + "_"
+                                    + currentDate.ToString("MM") + "_"
+                                    + currentDate.ToString("dd") + "//"
+                                    + "Otmetki_" + currentDate.ToString("yyyy") + "_"
+                                    + currentDate.ToString("MM") + "_"
+                                    + currentDate.ToString("dd") + "_"
+                                    + currentDate.ToString("HH") + "_"
+                                    + currentDate.ToString("mm") + ".xml";
+                targetDate = targetDate.AddMinutes(1);
             }
+            return result;
         }
 
         public FtpDataManager(string ftpPath, string user, string password)

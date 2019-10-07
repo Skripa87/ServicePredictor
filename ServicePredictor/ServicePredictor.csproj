@@ -127,7 +127,10 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="MatPart.cs" />
+    <Compile Include="Models\BusBuffer.cs" />
+    <Compile Include="Models\BusRouteBuffer.cs" />
     <Compile Include="Models\FtpFileDataElement.cs" />
+    <Compile Include="Models\MapPoint.cs" />
     <Compile Include="PredictorManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
