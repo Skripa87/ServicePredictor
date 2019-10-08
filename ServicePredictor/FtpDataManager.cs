@@ -35,23 +35,23 @@ namespace ServicePredictor
             return result;
         }
 
-        private List<FtpFileDataElement> GetUniqueElements(List<FtpFileDataElement> ftpFileDataElements)
-        {
-            if (ftpFileDataElements == null) return null;
-            var uniqueElements = new List<FtpFileDataElement>();
-            foreach (var item in ftpFileDataElements)
-            {
-                if (!uniqueElements.Any(f => f.BusRouteName.Equals(item.BusRouteName)
-                                        && f.CarNumber.Equals(item.CarNumber)
-                                        && f.Azimuth.Equals(item.Azimuth)
-                                        && f.Latitude.Equals(item.Latitude)
-                                        && f.Longitude.Equals(item.Longitude)))
-                {
-                    uniqueElements.Add(item);
-                }
-            }
-            return uniqueElements;
-        }
+        //private List<FtpFileDataElement> GetUniqueElements(List<FtpFileDataElement> ftpFileDataElements)
+        //{
+        //    if (ftpFileDataElements == null) return null;
+        //    var uniqueElements = new List<FtpFileDataElement>();
+        //    foreach (var item in ftpFileDataElements)
+        //    {
+        //        if (!uniqueElements.Any(f => f.BusRouteName.Equals(item.BusRouteName)
+        //                                && f.CarNumber.Equals(item.CarNumber)
+        //                                && f.Azimuth.Equals(item.Azimuth)
+        //                                && f.Latitude.Equals(item.Latitude)
+        //                                && f.Longitude.Equals(item.Longitude)))
+        //        {
+        //            uniqueElements.Add(item);
+        //        }
+        //    }
+        //    return uniqueElements;
+        //}
 
         private List<FtpFileDataElement> GetPreData(string fileName)
         {
@@ -135,7 +135,7 @@ namespace ServicePredictor
                     thread.Start();
                 }
             }
-            while (fileDataElementsArrResult.ToList().Any(f => f == null)) { }
+            while (fileDataElementsArrResult.ToList().Any(f => f.Count == 0)) { }
             for(int i = 0; i < coreCount; i++)
             {
                 result.AddRange(fileDataElementsArrResult[i]);
@@ -161,7 +161,7 @@ namespace ServicePredictor
                                         + targetDate.ToString("dd") + "_"
                                         + targetDate.ToString("HH") + "_"
                                         + targetDate.ToString("mm") + ".xml";
-                    result.AddRange(GetUniqueElements(GetPreData(fileName)) ?? new List<FtpFileDataElement>());
+                    result.AddRange(GetPreData(fileName) ?? new List<FtpFileDataElement>());
                     targetDate = targetDate.AddMinutes(1);
                 }
                 return result;
