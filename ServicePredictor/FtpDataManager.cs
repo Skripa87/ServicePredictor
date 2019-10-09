@@ -156,10 +156,12 @@ namespace ServicePredictor
                 var end = start.AddMinutes(coreWeight);
                 var timer = new TimerFtpDataManager(start, end, i);
                 threads[i] = new Thread(new ParameterizedThreadStart(ThreadGetData));
-                threads[i].Start(timer);
-                threads[i].Join();
+                threads[i].Start(timer);                
             }
-
+            foreach (var item in threads)
+            {
+                item.Join();
+            }
             foreach (var item in BusRoutesBuffer)
             {
                 result.AddRange(item);
