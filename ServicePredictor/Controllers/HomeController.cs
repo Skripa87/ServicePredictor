@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ServicePredictor.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -10,9 +11,10 @@ namespace ServicePredictor.Controllers
     {
         public ActionResult Index()
         {
-            var ftpManager = new FtpDataManager("ftp://92.50.187.210:21//bus1", "ftpuser", "Ln8#{T7nRsmd");
-            var busRouteManager = ftpManager.GetData();
-            //busRouteManager.CreateBusRoute();
+            var ftpManager = new FtpDataManager("ftp://192.168.10.10//bus1", "ftpuser", "Ln8#{T7nRsmd");
+            var x = ftpManager.GetData();
+            var xlworker = new XLWorker("D:\\table.xlsx");
+            xlworker.CreateXLDocument(x);
             return View();
         }
 

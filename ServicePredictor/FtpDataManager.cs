@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace ServicePredictor
 {
-    public class TimerFtpDataManager 
+    public class TimerFtpDataManager
     {
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
@@ -23,19 +23,17 @@ namespace ServicePredictor
             NumberCore = numberCore;
         }
     }
-    
+
     public class FtpDataManager
     {
         public string FtpPath { get; set; }
         private string UserName { get; set; }
         private string Password { get; set; }
-        private static List<BusRouteBuffer>[] BusRoutesBuffer { get; set; }
         private string ReadFileToString(string fileName)
         {
             var request = new WebClient();
             string url = FtpPath + fileName;
             request.Credentials = new NetworkCredential(UserName, Password);
-
             string result;
             try
             {
@@ -51,9 +49,7 @@ namespace ServicePredictor
 
         private List<BusRouteBuffer> GetPartData(string fileName)
         {
-            var buses = new List<BusCrew>();
-            var busRoutes = new List<BusRouteBuffer>();
-            StringReader reader;
+            StringReader reader = null;
             try
             {
                 reader = new StringReader(ReadFileToString(fileName));
@@ -71,10 +67,12 @@ namespace ServicePredictor
             {
                 return null;
             }
+            var buses = new List<BusCrew>();
+            var busRoutes = new List<BusRouteBuffer>();
             try
             {
                 var items = Document.GetElementsByTagName("item");
-                if (items != null)
+                if (items != null && items.Count > 1)
                 {
                     foreach (var item in items)
                     {
@@ -104,12 +102,12 @@ namespace ServicePredictor
                                          .BusesBuffer
                                          .Contains(busCrew))
                             {
+                                var busCrewFinder = busRoutes.ElementAt(busRouteIndex)
+                                                             .BusesBuffer
+                                                             .Find(b => b.Equals(busCrew));
                                 var busCrewIndex = busRoutes.ElementAt(busRouteIndex)
-                                                            .BusesBuffer.IndexOf(busRoutes.ElementAt(busRouteIndex)
                                                             .BusesBuffer
-                                                            .Find(f => f.CarNumber.Equals(garageNum) &&
-                                                                       f.Sheduler.Equals(graph) &&
-                                                                       f.Turn.Equals(smena)));
+                                                            .IndexOf(busCrewFinder);
                                 busRoutes.ElementAt(busRouteIndex)
                                          .BusesBuffer
                                          .ElementAt(busCrewIndex)
@@ -146,52 +144,73 @@ namespace ServicePredictor
                                      .AddHours(-1 * DateTime.Now.Hour)
                                      .AddMinutes(-1 * DateTime.Now.Minute)
                                      .AddSeconds(-1 * DateTime.Now.Second);
-            int coreCount = Environment.ProcessorCount;
-            int coreWeight = 1440 / coreCount;
-            var threads = new Thread[coreCount];
-            BusRoutesBuffer = new List<BusRouteBuffer>[coreCount];
-            for (int i = 0; i < coreCount; i++)
+            var current = targetDate.AddHours(6);
+            var end = targetDate.AddDays(1)
+                                .AddHours(-11);
+            while (!current.Equals(end))
             {
-                var start = targetDate.AddMinutes(i * coreWeight);
-                var end = start.AddMinutes(coreWeight);
-                var timer = new TimerFtpDataManager(start, end, i);
-                threads[i] = new Thread(new ParameterizedThreadStart(ThreadGetData));
-                threads[i].Start(timer);                
-            }
-            foreach (var item in threads)
-            {
-                item.Join();
-            }
-            foreach (var item in BusRoutesBuffer)
-            {
-                result.AddRange(item);
+                var fileName = "//" + current.ToString("yyyy") + "_" +
+                               current.ToString("MM") +
+                               "//" + current.ToString("yyyy") + "_"
+                                    + current.ToString("MM") + "_"
+                                    + current.ToString("dd") + "//"
+                                    + "Otmetki_" + current.ToString("yyyy") + "_"
+                                    + current.ToString("MM") + "_"
+                                    + current.ToString("dd") + "_"
+                                    + current.ToString("HH") + "_"
+                                    + current.ToString("mm") + ".xml";
+                var preResult = GetPartData(fileName);
+                result = BusRouteManager.AttachBusRoutes(result, preResult);
+                current = current.AddMinutes(1);
             }
             return result;
+            //int coreCount = Environment.ProcessorCount;
+            //int coreWeight = 1440 / coreCount;
+            //var threads = new Thread[coreCount];
+            //BusRoutesBuffer = new List<BusRouteBuffer>[coreCount];
+            //for (int i = 0; i < coreCount; i++)
+            //{
+            // var start = targetDate.AddMinutes(i * coreWeight);
+            // var end = start.AddMinutes(coreWeight);
+            // var timer = new TimerFtpDataManager(start, end, i);
+            // threads[i] = new Thread(new ParameterizedThreadStart(ThreadGetData));
+            // threads[i].Start(timer);
+            //}
+            //foreach (var item in threads)
+            //{
+            //    item.Join();
+            //}
+            //foreach (var item in BusRoutesBuffer)
+            //{
+            //    result.AddRange(item);
+            //}
+            //return result;
+            //ThreadGetData((object)new TimerFtpDataManager(targetDate.AddHours(4), targetDate.AddDays(1).AddHours(-4), 1));
         }
 
-        public void ThreadGetData(object timer)
-        {
-            if (timer == null) return;
-            var currentDate = ((TimerFtpDataManager)timer).Start;
-            var endDate = ((TimerFtpDataManager)timer).End;
-            var result = new List<BusRouteBuffer>();
-            while (!currentDate.Equals(endDate))
-            {
-                var fileName = "//" + currentDate.ToString("yyyy") + "_" +
-                               currentDate.ToString("MM") +
-                               "//" + currentDate.ToString("yyyy") + "_"
-                                    + currentDate.ToString("MM") + "_"
-                                    + currentDate.ToString("dd") + "//"
-                                    + "Otmetki_" + currentDate.ToString("yyyy") + "_"
-                                    + currentDate.ToString("MM") + "_"
-                                    + currentDate.ToString("dd") + "_"
-                                    + currentDate.ToString("HH") + "_"
-                                    + currentDate.ToString("mm") + ".xml";
-                result.AddRange(GetPartData(fileName) ?? new List<BusRouteBuffer>());
-                currentDate = currentDate.AddMinutes(1);
-            }
-            BusRoutesBuffer[((TimerFtpDataManager)timer).NumberCore] = result;
-        }
+        //public void ThreadGetData(object timer)
+        //{
+        //    if (timer == null) return;
+        //    var currentDate = ((TimerFtpDataManager)timer).Start;
+        //    var endDate = ((TimerFtpDataManager)timer).End;
+        //    var result = new List<BusRouteBuffer>();
+        //    while (!currentDate.Equals(endDate))
+        //    {
+        //        var fileName = "//" + currentDate.ToString("yyyy") + "_" +
+        //                       currentDate.ToString("MM") +
+        //                       "//" + currentDate.ToString("yyyy") + "_"
+        //                            + currentDate.ToString("MM") + "_"
+        //                            + currentDate.ToString("dd") + "//"
+        //                            + "Otmetki_" + currentDate.ToString("yyyy") + "_"
+        //                            + currentDate.ToString("MM") + "_"
+        //                            + currentDate.ToString("dd") + "_"
+        //                            + currentDate.ToString("HH") + "_"
+        //                            + currentDate.ToString("mm") + ".xml";
+        //        result.AddRange(GetPartData(fileName) ?? new List<BusRouteBuffer>());
+        //        currentDate = currentDate.AddMinutes(1);
+        //    }
+        //    BusRoutesBuffer[((TimerFtpDataManager)timer).NumberCore] = result;
+        //}
 
         public FtpDataManager(string ftpPath, string user, string password)
         {
