@@ -17,6 +17,15 @@ namespace ServicePredictor.Models
         {
             Id = Guid.NewGuid()
                      .ToString();
+            CarNumber = int.TryParse(carNumber, out var carNumberInt)
+                      ? carNumberInt 
+                      :-1;
+            Turn = int.TryParse(turn, out var turnNumber)
+                 ? turnNumber
+                 :-1;
+            Sheduler = int.TryParse(sheduler, out var shedulerNum)
+                     ? shedulerNum
+                     : -1;
             MapPoints = new List<MapPoint>();
         }
         
@@ -31,12 +40,12 @@ namespace ServicePredictor.Models
                           .ToString()),
                 Latitude = (double.TryParse(latitude, out var latitudeDouble)
                          ? latitudeDouble
-                         : (double.TryParse(latitude.Replace('.', ','), out var latitudeDoubleAfterReplace)
+                         : (double.TryParse(latitude.Replace(',', '.'), out var latitudeDoubleAfterReplace)
                            ? latitudeDoubleAfterReplace
                            : -1)),
                 Longitude = (double.TryParse(longitude, out var longitudeDouble)
                           ? longitudeDouble
-                          : (double.TryParse(longitude.Replace('.', ','), out var longitudeDoubleAfterReplace)
+                          : (double.TryParse(longitude.Replace(',', '.'), out var longitudeDoubleAfterReplace)
                            ? longitudeDoubleAfterReplace
                            : -1)),
                 Speed = (int.TryParse(speed, out var speedInt)
