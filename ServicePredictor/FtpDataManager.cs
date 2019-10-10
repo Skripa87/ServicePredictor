@@ -29,6 +29,7 @@ namespace ServicePredictor
         public string FtpPath { get; set; }
         private string UserName { get; set; }
         private string Password { get; set; }
+
         private string ReadFileToString(string fileName)
         {
             var request = new WebClient();
@@ -164,53 +165,7 @@ namespace ServicePredictor
                 current = current.AddMinutes(1);
             }
             return result;
-            //int coreCount = Environment.ProcessorCount;
-            //int coreWeight = 1440 / coreCount;
-            //var threads = new Thread[coreCount];
-            //BusRoutesBuffer = new List<BusRouteBuffer>[coreCount];
-            //for (int i = 0; i < coreCount; i++)
-            //{
-            // var start = targetDate.AddMinutes(i * coreWeight);
-            // var end = start.AddMinutes(coreWeight);
-            // var timer = new TimerFtpDataManager(start, end, i);
-            // threads[i] = new Thread(new ParameterizedThreadStart(ThreadGetData));
-            // threads[i].Start(timer);
-            //}
-            //foreach (var item in threads)
-            //{
-            //    item.Join();
-            //}
-            //foreach (var item in BusRoutesBuffer)
-            //{
-            //    result.AddRange(item);
-            //}
-            //return result;
-            //ThreadGetData((object)new TimerFtpDataManager(targetDate.AddHours(4), targetDate.AddDays(1).AddHours(-4), 1));
         }
-
-        //public void ThreadGetData(object timer)
-        //{
-        //    if (timer == null) return;
-        //    var currentDate = ((TimerFtpDataManager)timer).Start;
-        //    var endDate = ((TimerFtpDataManager)timer).End;
-        //    var result = new List<BusRouteBuffer>();
-        //    while (!currentDate.Equals(endDate))
-        //    {
-        //        var fileName = "//" + currentDate.ToString("yyyy") + "_" +
-        //                       currentDate.ToString("MM") +
-        //                       "//" + currentDate.ToString("yyyy") + "_"
-        //                            + currentDate.ToString("MM") + "_"
-        //                            + currentDate.ToString("dd") + "//"
-        //                            + "Otmetki_" + currentDate.ToString("yyyy") + "_"
-        //                            + currentDate.ToString("MM") + "_"
-        //                            + currentDate.ToString("dd") + "_"
-        //                            + currentDate.ToString("HH") + "_"
-        //                            + currentDate.ToString("mm") + ".xml";
-        //        result.AddRange(GetPartData(fileName) ?? new List<BusRouteBuffer>());
-        //        currentDate = currentDate.AddMinutes(1);
-        //    }
-        //    BusRoutesBuffer[((TimerFtpDataManager)timer).NumberCore] = result;
-        //}
 
         public FtpDataManager(string ftpPath, string user, string password)
         {
