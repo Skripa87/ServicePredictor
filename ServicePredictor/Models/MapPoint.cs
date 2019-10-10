@@ -14,6 +14,10 @@ namespace ServicePredictor.Models
         public int Azimut { get; set; }
         public int Speed { get; set; }
 
+        public MapPoint()
+        {
+
+        }
         public bool Equals(MapPoint other)
         {
             return (other.Latitude.Equals(Latitude) && other.Longitude.Equals(Longitude))

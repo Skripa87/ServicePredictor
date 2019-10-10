@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using ClosedXML.Excel;
+using ServicePredictor.Models;
 
-namespace ServicePredictor.Models
+namespace ServicePredictor
 {
     public class XLWorker
     {
