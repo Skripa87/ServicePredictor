@@ -5,7 +5,7 @@ using System.Web;
 
 namespace ServicePredictor.Models
 {
-    public class BusStop
+    public class Station
     {
         public string Id { get; set; }
         public string Name { get; set; }
@@ -18,6 +18,11 @@ namespace ServicePredictor.Models
         public string AccessCode { get; set; }
         public string UserCity { get; set; }
 
-        public BusStop(){}
+        public virtual ICollection<BusRoute> BusRoutes { get; set; }
+
+        public Station()
+        {
+            BusRoutes = new List<BusRoute>();
+        }
     }
 }

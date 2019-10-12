@@ -12,9 +12,7 @@ namespace ServicePredictor.Controllers
         public ActionResult Index()
         {
             var ftpManager = new FtpDataManager("ftp://192.168.10.10//bus1", "ftpuser", "Ln8#{T7nRsmd");
-            var x = ftpManager.GetData();
-            var xlworker = new XLWorker("D:\\table.xlsx");
-            xlworker.CreateXLDocument(x);
+            ftpManager.GetData();
             return View();
         }
 

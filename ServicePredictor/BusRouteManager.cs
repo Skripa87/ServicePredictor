@@ -51,5 +51,49 @@ namespace ServicePredictor
             }
             return busRoutesBufferFirst;
         }
+
+        public static List<BusRoute> CreateValidBusRoutes(List<BusRouteBuffer> busRoutesBuffer)
+        {
+            var result = new List<BusRoute>();
+            var dataBaseWorker = new DataBaseWorker();
+            var stations = dataBaseWorker.GetStations();
+            foreach (var item in busRoutesBuffer)
+            {
+                var summ = 0; int selected = 0;
+                foreach (var bus in item.BusesBuffer)
+                {
+                    var correctSumm = item.BusesBuffer
+                                         .Select(s => bus.SimilarityCount(s))
+                                         .Sum();
+                    if(correctSumm > summ)
+                    {
+                        selected = bus.CarNumber;
+                        summ = correctSumm;
+                    }
+                }
+                var selectedBusCrew = item.BusesBuffer
+                                          .Find(f => f.CarNumber.Equals(selected));
+                var busRoute = new BusRoute()
+                {
+                    Id = Guid.NewGuid()
+                             .ToString(),
+                    Name = item.BusRouteName,
+                    Active = true
+                };
+                var busRouteStations = new List<Station>();
+                foreach (var point in selectedBusCrew.MapPoints)
+                {
+                    var finderStation = stations.Find(s => MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 3.5);
+                    if(finderStation != null) 
+                    {
+                        busRouteStations.Add(finderStation);
+                    }
+                    busRoute.MapPoints.Add(point);
+                }
+                result.Add(busRoute);
+            }
+            dataBaseWorker.SaveBusRoute(result);
+            return result;
+        }
     }
 }

@@ -29,6 +29,20 @@ namespace ServicePredictor.Models
             MapPoints = new List<MapPoint>();
         }
         
+        public int SimilarityCount(BusCrew other)
+        {
+            var result = 0;
+            foreach (var item in MapPoints)
+            {
+                if(other.MapPoints
+                        .Count(m=>MatPart.GaversinusMethod(item.Latitude,m.Latitude,item.Longitude,m.Longitude) <= 3.5) > 0) 
+                {
+                    result++;
+                }
+            }
+            return result;
+        }
+
         public void InsertPoint(string latitude, string longitude, string date, string azimuth, string speed) 
         {
             var newMapPoint = new MapPoint()

@@ -14,9 +14,11 @@ namespace ServicePredictor.Models
         public int Azimut { get; set; }
         public int Speed { get; set; }
 
+        public virtual ICollection<BusRoute> BusRoutes { get; set; }
+            
         public MapPoint()
         {
-
+            BusRoutes = new List<BusRoute>();
         }
         public bool Equals(MapPoint other)
         {

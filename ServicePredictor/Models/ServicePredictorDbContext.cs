@@ -12,11 +12,31 @@
         // 
         // Если требуется выбрать другую базу данных или поставщик базы данных, измените строку подключения "ServicePredictorDbContext" 
         // в файле конфигурации приложения.
+        
         public ServicePredictorDbContext()
             : base("name=ServicePredictorDbContext")
         {
         }
-        public virtual DbSet<MyEntity> MyEntities { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<BusRoute>()
+                        .HasKey(b => b.Id)
+                        .HasMany(r => r.Stations)
+                        .WithMany(s => s.BusRoutes)
+                        .Map(m => m.MapLeftKey("Station_Id")
+                                   .MapRightKey("BusRoute_Id")
+                                   .ToTable("Stations_BusRoutes"));
+            modelBuilder.Entity<MapPoint>()
+                        .HasKey(m => m.Id)
+                        .HasMany(r => r.BusRoutes)
+                        .WithMany(w => w.MapPoints)
+                        .Map(m => m.MapLeftKey("BusRoute_Id")
+                        .MapRightKey("MapPoint_Id")
+                        .ToTable("BusRoutes_MapPoints"));
+        }
+        public virtual DbSet<Station> Stations { get; set; }
+        public virtual DbSet<BusRoute> BusRoutes { get; set; }
     }
 
     //public class MyEntity

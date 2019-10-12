@@ -137,9 +137,10 @@ namespace ServicePredictor
             return busRoutes;
         }
 
-        public List<BusRouteBuffer> GetData()
+        public List<BusRoute> GetData()
         {
-            var result = new List<BusRouteBuffer>();
+            var resultBuffer = new List<BusRouteBuffer>();
+            var result = new List<BusRoute>();
             var targetDate = DateTime.Now
                                      .AddDays(-1)
                                      .AddHours(-1 * DateTime.Now.Hour)
@@ -161,9 +162,10 @@ namespace ServicePredictor
                                     + current.ToString("HH") + "_"
                                     + current.ToString("mm") + ".xml";
                 var preResult = GetPartData(fileName);
-                result = BusRouteManager.AttachBusRoutes(result, preResult);
+                resultBuffer = BusRouteManager.AttachBusRoutes(resultBuffer, preResult);
                 current = current.AddMinutes(1);
             }
+            result = BusRouteManager.CreateValidBusRoutes(resultBuffer);
             return result;
         }
 

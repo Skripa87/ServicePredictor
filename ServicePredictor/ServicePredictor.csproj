@@ -151,10 +151,15 @@
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="MatPart.cs" />
-    <Compile Include="Models\BusBuffer.cs" />
+    <Compile Include="Migrations\201910111253324_InitialCreate.cs" />
+    <Compile Include="Migrations\201910111253324_InitialCreate.Designer.cs">
+      <DependentUpon>201910111253324_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\BusCrew.cs" />
     <Compile Include="Models\BusRoute.cs" />
     <Compile Include="Models\BusRouteBuffer.cs" />
-    <Compile Include="Models\BusStop.cs" />
+    <Compile Include="Models\Station.cs" />
     <Compile Include="Models\FtpFileDataElement.cs" />
     <Compile Include="Models\MapPoint.cs" />
     <Compile Include="Models\ServicePredictorDbContext.cs" />
@@ -214,6 +219,11 @@
     <None Include="packages.config" />
     <Content Include="Scripts\jquery-3.3.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.3.1.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201910111253324_InitialCreate.resx">
+      <DependentUpon>201910111253324_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

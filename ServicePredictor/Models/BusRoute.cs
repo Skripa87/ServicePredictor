@@ -9,16 +9,17 @@ namespace ServicePredictor.Models
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public string BusStopStart_Id { get; set; }
-        public virtual BusStop BusStopStart { get; set; }
-        public string BusStopEnd_Id { get; set; }
-        public virtual BusStop BusStopEnd { get; set; }
-        public virtual ICollection<BusStop> BusStops { get; set; }
+        public string StartStationId_Id { get; set; }
+        public virtual Station StartStation { get; set; }
+        public string LastStation_Id { get; set; }
+        public virtual Station LastStation { get; set; }
+        public bool Active { get; set; }
+        public virtual ICollection<Station> Stations { get; set; }
         public virtual ICollection<MapPoint> MapPoints { get; set; }
 
         public BusRoute() 
         {
-            BusStops = new List<BusStop>();
+            Stations = new List<Station>();
             MapPoints = new List<MapPoint>();
         }
     }

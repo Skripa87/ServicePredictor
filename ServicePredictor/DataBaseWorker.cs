@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ServicePredictor.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -7,10 +8,28 @@ namespace ServicePredictor
 {
     public class DataBaseWorker
     {
-        private 
+        private ServicePredictorDbContext Db { get; set; }
         public DataBaseWorker()
         {
+            Db = new ServicePredictorDbContext();
+        }
 
+        public List<Station> GetStations() 
+        {
+            return Db.Stations.ToList();
+        }
+
+        public void SaveBusRoute(List<BusRoute> busRoutes) 
+        {
+            if (busRoutes == null || busRoutes.Count == 0) return;
+            foreach (var item in busRoutes)
+            {
+                var current = Db.BusRoutes.Where(s => s.Name.Equals(item.Name))
+                                          .FirstOrDefault();
+                current.Active = false;
+            }
+            Db.BusRoutes.AddRange(busRoutes);
+            Db.SaveChanges();
         }
     }
 }
