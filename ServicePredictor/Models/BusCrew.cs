@@ -38,7 +38,9 @@ namespace ServicePredictor.Models
                  .Sort();
             var otherArrMapPoints = other.MapPoints
                                          .ToArray();
-            var count = MapPoints.Count;
+            var count = MapPoints.Count > other.MapPoints.Count
+                      ? other.MapPoints.Count
+                      : MapPoints.Count;
             for(int i = 0; i < count; i++)
             {
                 result += (MatPart.GaversinusMethod(otherArrMapPoints[i].Latitude, arrMapPoint[i].Latitude, otherArrMapPoints[i].Longitude, arrMapPoint[i].Longitude) <= 3.5

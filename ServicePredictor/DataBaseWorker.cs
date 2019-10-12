@@ -26,7 +26,10 @@ namespace ServicePredictor
             {
                 var current = Db.BusRoutes.Where(s => s.Name.Equals(item.Name))
                                           .FirstOrDefault();
-                current.Active = false;
+                if (current != null)
+                {
+                    current.Active = false;
+                }
             }
             Db.BusRoutes.AddRange(busRoutes);
             Db.SaveChanges();

@@ -82,8 +82,8 @@ namespace ServicePredictor
                 };
                 var busRouteStations = new List<Station>();
                 foreach (var point in selectedBusCrew.MapPoints)
-                {
-                    var finderStation = stations.Find(s => MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 3.5);
+                 {
+                    var finderStation = stations.Find(s => MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 30);
                     if(finderStation != null) 
                     {
                         busRouteStations.Add(finderStation);
