@@ -5,7 +5,7 @@ using System.Web;
 
 namespace ServicePredictor.Models
 {
-    public class Station
+    public class Station:IEquatable<Station>
     {
         public string Id { get; set; }
         public string Name { get; set; }
@@ -23,6 +23,11 @@ namespace ServicePredictor.Models
         public Station()
         {
             BusRoutes = new List<BusRoute>();
+        }
+
+        public bool Equals(Station other)
+        {
+            return Lat.Equals(other.Lat) && Lng.Equals(other.Lng) && Name.Equals(other.Name);
         }
     }
 }
