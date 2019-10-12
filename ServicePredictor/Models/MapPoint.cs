@@ -5,7 +5,7 @@ using System.Web;
 
 namespace ServicePredictor.Models
 {
-    public class MapPoint:IEquatable<MapPoint>
+    public class MapPoint:IEquatable<MapPoint>, IComparable<MapPoint>
     {
         public string Id { get; set; }
         public DateTime TimePoint { get; set; }
@@ -36,6 +36,15 @@ namespace ServicePredictor.Models
             hashCode = hashCode * -1521134295 + Azimut.GetHashCode();
             hashCode = hashCode * -1521134295 + Speed.GetHashCode();
             return hashCode;
+        }
+
+        public int CompareTo(MapPoint other)
+        {
+            return other.TimePoint.Equals(TimePoint)
+                   ? 0
+                   : (other.TimePoint < TimePoint 
+                     ? -1
+                     : 1);
         }
     }
 }

@@ -32,13 +32,18 @@ namespace ServicePredictor.Models
         public int SimilarityCount(BusCrew other)
         {
             var result = 0;
-            foreach (var item in MapPoints)
+            MapPoints.Sort();
+            var arrMapPoint = MapPoints.ToArray();
+            other.MapPoints
+                 .Sort();
+            var otherArrMapPoints = other.MapPoints
+                                         .ToArray();
+            var count = MapPoints.Count;
+            for(int i = 0; i < count; i++)
             {
-                if(other.MapPoints
-                        .Count(m=>MatPart.GaversinusMethod(item.Latitude,m.Latitude,item.Longitude,m.Longitude) <= 3.5) > 0) 
-                {
-                    result++;
-                }
+                result += (MatPart.GaversinusMethod(otherArrMapPoints[i].Latitude, arrMapPoint[i].Latitude, otherArrMapPoints[i].Longitude, arrMapPoint[i].Longitude) <= 3.5
+                          ? 1
+                          : 0); 
             }
             return result;
         }
