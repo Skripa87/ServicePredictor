@@ -80,13 +80,14 @@ namespace ServicePredictor
                     Name = item.BusRouteName,
                     Active = true
                 };
-                var busRouteStations = new List<Station>();
+                selectedBusCrew.MapPoints
+                               .Sort();
                 foreach (var point in selectedBusCrew.MapPoints)
                  {
-                    var finderStation = stations.Find(s => MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 150);
-                    if(finderStation != null && !busRouteStations.Contains(finderStation)) 
+                    var finderStation = stations.Find(s => MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 10);
+                    if(finderStation != null && !busRoute.Stations.Contains(finderStation)) 
                     {
-                        busRouteStations.Add(finderStation);
+                        busRoute.Stations.Add(finderStation);
                         busRoute.MapPoints.Add(new MapPoint()
                         {
                             Speed = 0,

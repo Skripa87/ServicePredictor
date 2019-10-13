@@ -148,7 +148,7 @@ namespace ServicePredictor
                                      .AddSeconds(-1 * DateTime.Now.Second);
             var current = targetDate.AddHours(6);
             var end = targetDate.AddDays(1)
-                                .AddHours(-11);
+                                .AddHours(-8);
             while (!current.Equals(end))
             {
                 var fileName = "//" + current.ToString("yyyy") + "_" +

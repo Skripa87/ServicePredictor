@@ -43,8 +43,8 @@ namespace ServicePredictor.Models
             return other.TimePoint.Equals(TimePoint)
                    ? 0
                    : (other.TimePoint < TimePoint 
-                     ? -1
-                     : 1);
+                     ? 1
+                     : -1);
         }
     }
 }

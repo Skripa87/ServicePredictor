@@ -74,15 +74,21 @@ namespace ServicePredictor
                 range.Merge();
                 range.SetValue(String.Format("Маршрут номер = {0}", busRoute.Name));
                 ws.Cell(2, 1).SetValue("Азимут");
-                ws.Cell(2, 2).SetValue("Широта");
                 ws.Cell(2, 3).SetValue("Долгота");
+                ws.Cell(2, 2).SetValue("Широта");
+                ws.Cell(2, 4).SetValue("Остановка");
                 var row = 3;
                 var k = 0;
                 foreach (var item in busRoute.MapPoints)
                 {
                     ws.Cell(row, 1).SetValue(item.Azimut);
-                    ws.Cell(row, 2).SetValue(item.Latitude);
-                    ws.Cell(row, 3).SetValue(item.Longitude);
+                    ws.Cell(row, 2).SetValue(item.Longitude);
+                    ws.Cell(row, 3).SetValue(item.Latitude);
+                    ws.Cell(row, 4).SetValue(busRoute.Stations
+                                                     .Where(s => s.Lat.Equals(item.Latitude) 
+                                                              && s.Lng.Equals(item.Longitude))
+                                                     ?.FirstOrDefault()
+                                                     ?.Name ?? "");
                     row++;
                     if (row > 64000)
                     {
@@ -93,8 +99,9 @@ namespace ServicePredictor
                         range.Merge();
                         range.SetValue(String.Format("Маршрут номер = {0}", busRoute.Name));
                         ws.Cell(2, 1).SetValue("Азимут");
-                        ws.Cell(2, 2).SetValue("Широта");
-                        ws.Cell(2, 3).SetValue("Долгота");
+                        ws.Cell(2, 2).SetValue("Долгота");
+                        ws.Cell(2, 3).SetValue("Широта");
+                        ws.Cell(2, 4).SetValue("Остановка");
                         row = 3;
                     }
                 }
