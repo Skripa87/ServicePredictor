@@ -73,7 +73,7 @@ namespace ServicePredictor
             try
             {
                 var items = Document.GetElementsByTagName("item");
-                if (items != null && items.Count > 1)
+                if (items.Count > 1)
                 {
                     foreach (var item in items)
                     {
@@ -98,7 +98,7 @@ namespace ServicePredictor
                         var busCrew = new BusCrew(garageNum, smena, graph);
                         if (busRoutes.Contains(busRoute))
                         {
-                            var busRouteIndex = busRoutes.IndexOf(busRoutes.Find(b => b.BusRouteName.Equals(marsh)));
+                            var busRouteIndex = busRoutes.IndexOf(busRoutes.Find(b => string.Equals(b.BusRouteName,marsh)));
                             if (busRoutes.ElementAt(busRouteIndex)
                                          .BusesBuffer
                                          .Contains(busCrew))
@@ -148,7 +148,7 @@ namespace ServicePredictor
                                      .AddSeconds(-1 * DateTime.Now.Second);
             var current = targetDate.AddHours(6);
             var end = targetDate.AddDays(1)
-                                .AddHours(-8);
+                                .AddHours(-3);
             while (!current.Equals(end))
             {
                 var fileName = "//" + current.ToString("yyyy") + "_" +
@@ -165,6 +165,8 @@ namespace ServicePredictor
                 resultBuffer = BusRouteManager.AttachBusRoutes(resultBuffer, preResult);
                 current = current.AddMinutes(1);
             }
+            var xlwr = new XlWorker("d://new_table.xlsx");
+            xlwr.CreateXlDocument(resultBuffer);
             result = BusRouteManager.CreateValidBusRoutes(resultBuffer);
             return result;
         }

@@ -30,7 +30,7 @@ namespace ServicePredictor.Models
         
         public bool Equals(BusRouteBuffer other)
         {
-            return other.BusRouteName.Equals(BusRouteName);
+            return other != null && string.Equals(other.BusRouteName,BusRouteName);
         }
     }
 }

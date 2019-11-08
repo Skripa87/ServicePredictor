@@ -2,46 +2,42 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 
 namespace ServicePredictor
 {
     public static class BusRouteManager
     {
-        public static List<BusRouteBuffer> AttachBusRoutes(List<BusRouteBuffer> busRoutesBufferFirst, List<BusRouteBuffer> busRoutesbufferSecond)
+        public static List<BusRouteBuffer> AttachBusRoutes(List<BusRouteBuffer> busRoutsFirst, List<BusRouteBuffer> busRoutsSecond)
         {
-            if (busRoutesBufferFirst == null && busRoutesbufferSecond != null) return busRoutesbufferSecond;
-            if (busRoutesBufferFirst != null && busRoutesbufferSecond == null) return busRoutesBufferFirst;
-            if (busRoutesBufferFirst == null && busRoutesbufferSecond == null) return new List<BusRouteBuffer>();
-            foreach (var item in busRoutesbufferSecond)
+            if (busRoutsFirst == null && busRoutsSecond != null) return busRoutsSecond;
+            if (busRoutsFirst != null && busRoutsSecond == null) return busRoutsFirst;
+            if (busRoutsFirst == null) return new List<BusRouteBuffer>();
+            foreach (var item in busRoutsSecond)
             {
-                if (!busRoutesBufferFirst.Contains(item))
+                if (!busRoutsFirst.Contains(item))
                 {
-                    busRoutesBufferFirst.Add(item);
+                    busRoutsFirst.Add(item);
                 }
                 else
                 {
-                    var busRouteFinder = busRoutesBufferFirst.Find(f => f.BusRouteName.Equals(item.BusRouteName));
-                    var busRouteFinderIndex = busRoutesBufferFirst.IndexOf(busRouteFinder);
+                    var busRouteFinder = busRoutsFirst.Find(f => string.Equals(f.BusRouteName,item.BusRouteName));
+                    var busRouteFinderIndex = busRoutsFirst.IndexOf(busRouteFinder);
                     foreach (var crew in item.BusesBuffer)
                     {
-                        if (!busRoutesBufferFirst.ElementAt(busRouteFinderIndex)
+                        if (!busRoutsFirst.ElementAt(busRouteFinderIndex)
                                                 .BusesBuffer
                                                 .Contains(crew))
                         {
-                            busRoutesBufferFirst.ElementAt(busRouteFinderIndex)
+                            busRoutsFirst.ElementAt(busRouteFinderIndex)
                                                 .BusesBuffer
                                                 .Add(crew);
                         }
                         else
                         {
-                            var crewFinder = busRoutesBufferFirst.ElementAt(busRouteFinderIndex)
-                                                                 .BusesBuffer
-                                                                 .Find(f => f.CarNumber.Equals(crew.CarNumber));
-                            var crewFinderIndex = busRoutesBufferFirst.ElementAt(busRouteFinderIndex)
+                            var crewFinderIndex = busRoutsFirst.ElementAt(busRouteFinderIndex)
                                                                       .BusesBuffer
                                                                       .IndexOf(crew);
-                            busRoutesBufferFirst.ElementAt(busRouteFinderIndex)
+                            busRoutsFirst.ElementAt(busRouteFinderIndex)
                                                 .BusesBuffer
                                                 .ElementAt(crewFinderIndex)
                                                 .InsertPoints(crew.MapPoints);
@@ -49,30 +45,30 @@ namespace ServicePredictor
                     }
                 }
             }
-            return busRoutesBufferFirst;
+            return busRoutsFirst;
         }
 
-        public static List<BusRoute> CreateValidBusRoutes(List<BusRouteBuffer> busRoutesBuffer)
+        public static List<BusRoute> CreateValidBusRoutes(List<BusRouteBuffer> busRoutsBuffer)
         {
             var result = new List<BusRoute>();
             var dataBaseWorker = new DataBaseWorker();
             var stations = dataBaseWorker.GetStations();
-            foreach (var item in busRoutesBuffer)
+            foreach (var item in busRoutsBuffer)
             {
-                var summ = 0; int selected = 0;
+                var sum = 0; int selected = 0;
                 foreach (var bus in item.BusesBuffer)
                 {
                     var correctSumm = item.BusesBuffer
                                          .Select(s => bus.SimilarityCount(s))
                                          .Sum();
-                    if(correctSumm > summ)
+                    if(correctSumm > sum)
                     {
                         selected = bus.CarNumber;
-                        summ = correctSumm;
+                        sum = correctSumm;
                     }
                 }
                 var selectedBusCrew = item.BusesBuffer
-                                          .Find(f => f.CarNumber.Equals(selected));
+                                          .Find(f => f.CarNumber == selected);
                 var busRoute = new BusRoute()
                 {
                     Id = Guid.NewGuid()
@@ -83,12 +79,15 @@ namespace ServicePredictor
                 selectedBusCrew.MapPoints
                                .Sort();
                 foreach (var point in selectedBusCrew.MapPoints)
-                 {
-                    var finderStation = stations.Find(s => MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 10);
-                    if(finderStation != null && !busRoute.Stations.Contains(finderStation)) 
+                {
+                    var finderStation = stations.Find(s => (MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 26));
+                    if(finderStation != null && !busRoute.Stations
+                                                         .Contains(finderStation)) 
                     {
-                        busRoute.Stations.Add(finderStation);
-                        busRoute.MapPoints.Add(new MapPoint()
+                        busRoute.Stations
+                                .Add(finderStation);
+                        busRoute.MapPoints
+                                .Add(new MapPoint()
                         {
                             Speed = 0,
                             Id = Guid.NewGuid()
@@ -100,7 +99,8 @@ namespace ServicePredictor
                             Azimut = point.Azimut
                         });
                     }
-                    busRoute.MapPoints.Add(point);
+                    busRoute.MapPoints
+                            .Add(point);
                 }
                 result.Add(busRoute);
             }

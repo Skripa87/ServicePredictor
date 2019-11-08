@@ -27,7 +27,7 @@ namespace ServicePredictor.Models
 
         public bool Equals(Station other)
         {
-            return Lat.Equals(other.Lat) && Lng.Equals(other.Lng) && Name.Equals(other.Name);
+            return other != null && (Lat.Equals(other.Lat) && Lng.Equals(other.Lng) && Name.Equals(other.Name));
         }
     }
 }
