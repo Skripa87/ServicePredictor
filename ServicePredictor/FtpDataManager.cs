@@ -146,7 +146,7 @@ namespace ServicePredictor
                                      .AddHours(-1 * DateTime.Now.Hour)
                                      .AddMinutes(-1 * DateTime.Now.Minute)
                                      .AddSeconds(-1 * DateTime.Now.Second);
-            var current = targetDate.AddHours(6);
+            var current = targetDate.AddHours(2);
             var end = targetDate.AddDays(1)
                                 .AddHours(-3);
             while (!current.Equals(end))
