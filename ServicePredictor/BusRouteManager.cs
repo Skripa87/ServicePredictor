@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 
 namespace ServicePredictor
 {
@@ -20,7 +21,7 @@ namespace ServicePredictor
                 }
                 else
                 {
-                    var busRouteFinder = busRoutsFirst.Find(f => string.Equals(f.BusRouteName,item.BusRouteName));
+                    var busRouteFinder = busRoutsFirst.Find(f => string.Equals(f.BusRouteName, item.BusRouteName));
                     var busRouteFinderIndex = busRoutsFirst.IndexOf(busRouteFinder);
                     foreach (var crew in item.BusesBuffer)
                     {
@@ -55,20 +56,17 @@ namespace ServicePredictor
             var stations = dataBaseWorker.GetStations();
             foreach (var item in busRoutsBuffer)
             {
-                var sum = 0; int selected = 0;
+                var sum = 0;
+                BusCrew selected = null;
                 foreach (var bus in item.BusesBuffer)
                 {
-                    var correctSumm = item.BusesBuffer
+                    var correctSum = item.BusesBuffer
                                          .Select(s => bus.SimilarityCount(s))
                                          .Sum();
-                    if(correctSumm > sum)
-                    {
-                        selected = bus.CarNumber;
-                        sum = correctSumm;
-                    }
+                    if (correctSum <= sum) continue;
+                    selected = bus;
+                    sum = correctSum;
                 }
-                var selectedBusCrew = item.BusesBuffer
-                                          .Find(f => f.CarNumber == selected);
                 var busRoute = new BusRoute()
                 {
                     Id = Guid.NewGuid()
@@ -76,35 +74,91 @@ namespace ServicePredictor
                     Name = item.BusRouteName,
                     Active = true
                 };
-                selectedBusCrew.MapPoints
-                               .Sort();
-                foreach (var point in selectedBusCrew.MapPoints)
-                {
-                    var finderStation = stations.Find(s => (MatPart.GaversinusMethod(s.Lat, point.Latitude, s.Lng, point.Longitude) <= 26));
-                    if(finderStation != null && !busRoute.Stations
-                                                         .Contains(finderStation)) 
-                    {
-                        busRoute.Stations
-                                .Add(finderStation);
-                        busRoute.MapPoints
-                                .Add(new MapPoint()
-                        {
-                            Speed = 0,
-                            Id = Guid.NewGuid()
-                                     .ToString(),
-                            Latitude = finderStation.Lat,
-                            Longitude = finderStation.Lng,
-                            TimePoint = point.TimePoint
-                                             .AddSeconds(5),
-                            Azimut = point.Azimut
-                        });
-                    }
-                    busRoute.MapPoints
-                            .Add(point);
-                }
+                busRoute.MapPoints
+                        .ToList()
+                        .AddRange(selected?.MapPoints ?? new List<MapPoint>());
                 result.Add(busRoute);
             }
             dataBaseWorker.SaveBusRoute(result);
+            return result;
+        }
+
+        private static int GetIndexPointInBusRoute(BusRoute busRoute, MapPoint point)
+        {
+            int result = -1;
+            var points = busRoute.MapPoints
+                                 .ToList();
+            var length = MatPart.GaversinusMethod(points.First()
+                                                                .Latitude,
+                                                  point.Latitude,
+                                                 points.First()
+                                                                .Longitude,
+                                                 point.Longitude);
+            foreach (var item in points)
+            {
+                var currentLength = MatPart.GaversinusMethod(point.Latitude, point.Latitude, point.Longitude, point.Longitude);
+                if (!(currentLength < length)) continue;
+                length = currentLength;
+                result = points.IndexOf(point);
+            }
+            return length > 50 ? -1 : result;
+        }
+
+        private static double GetTimeOfPredict(int indexFirst, int indexLast, List<MapPoint> mapPoints)
+        {
+            double resultLength = 0;
+            double speedSummary = 0;
+            var arrPoints = mapPoints.ToArray();
+            for (int i = indexFirst; i < indexLast; i++)
+            {
+                resultLength += MatPart.GaversinusMethod(arrPoints[i].Latitude, arrPoints[i + 1].Latitude,
+                                                        arrPoints[i].Longitude, arrPoints[i + 1].Longitude);
+                speedSummary += arrPoints[i].Speed;
+            }
+            var speed = speedSummary / Math.Abs(indexLast - indexFirst);
+            speed = speed * 1000 / 3600;
+            return resultLength / speed;
+        }
+
+        public static Dictionary<string, double> GetAllPredict(FtpDataManager manager, string stationId)
+        {
+            var result = new Dictionary<string,double>();
+            var dataBaseWorker = new DataBaseWorker();
+            var station = dataBaseWorker.GetStation(stationId);
+            var stationPoint = new MapPoint()
+            {
+                Latitude = station.Lat,
+                Longitude = station.Lng,
+                Speed = 0,
+                TimePoint = DateTime.Now,
+                Id = Guid.NewGuid()
+                         .ToString(),
+                Azimut = 0
+            };
+            var busRoutes = dataBaseWorker.GetBusRouts();
+            var current = DateTime.Now.AddMinutes(-1);
+            var fileName = "//" + "Otmetki_" + current.ToString("yyyy") + "_"
+                                + current.ToString("MM") + "_"
+                                + current.ToString("dd") + "_"
+                                + current.ToString("HH") + "_"
+                                + current.ToString("mm") + ".xml";
+            var baseRouteData = manager.GetPartData(fileName);
+            foreach (var item in baseRouteData)
+            {
+                var currentBusRoute = busRoutes.Find(b => string.Equals(b.Name, item.BusRouteName));
+                int pointStationInBusRoute = GetIndexPointInBusRoute(currentBusRoute,stationPoint);
+                if (pointStationInBusRoute == -1) continue;
+                
+                foreach (var busCrew in item.BusesBuffer)
+                {
+                    busCrew.MapPoints
+                           .Sort();
+                    var index = GetIndexPointInBusRoute(currentBusRoute, busCrew.MapPoints
+                                                                                     .Last());
+                    result.Add(item.BusRouteName + busCrew.CarNumber,GetTimeOfPredict(index,pointStationInBusRoute,currentBusRoute.MapPoints
+                                                                                                                                                  .ToList()));
+                }
+            }
             return result;
         }
     }

@@ -48,7 +48,7 @@ namespace ServicePredictor
             return result;
         }
 
-        private List<BusRouteBuffer> GetPartData(string fileName)
+        public List<BusRouteBuffer> GetPartData(string fileName)
         {
             StringReader reader = null;
             try
