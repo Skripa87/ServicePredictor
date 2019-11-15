@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace ServicePredictor.Models
 {
@@ -11,7 +9,7 @@ namespace ServicePredictor.Models
         public int CarNumber { get;}
         public int Turn { get;}
         public int Sheduler { get;}
-        public List<MapPoint> MapPoints { get; set; }
+        public List<MapPoint> MapPoints { get; }
         
         public BusCrew(string carNumber, string turn, string sheduler) 
         {
@@ -38,14 +36,16 @@ namespace ServicePredictor.Models
                  .Sort();
             var otherArrMapPoints = other.MapPoints
                                          .ToArray();
-            var count = MapPoints.Count > other.MapPoints.Count
-                      ? other.MapPoints.Count
+            var count = MapPoints.Count > other.MapPoints
+                                               .Count
+                      ? other.MapPoints
+                             .Count
                       : MapPoints.Count;
             for(int i = 0; i < count; i++)
             {
-                result += (MatPart.GaversinusMethod(otherArrMapPoints[i].Latitude, arrMapPoint[i].Latitude, otherArrMapPoints[i].Longitude, arrMapPoint[i].Longitude) <= 3.5
+                result += otherArrMapPoints[i].Equals(arrMapPoint[i])
                           ? 1
-                          : 0); 
+                          : 0; 
             }
             return result;
         }

@@ -20,13 +20,13 @@
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<BusRoute>()
-                        .HasKey(b => b.Id)
-                        .HasMany(r => r.Stations)
-                        .WithMany(s => s.BusRoutes)
-                        .Map(m => m.MapLeftKey("Station_Id")
-                                   .MapRightKey("BusRoute_Id")
-                                   .ToTable("Stations_BusRoutes"));
+            //modelBuilder.Entity<BusRoute>()
+            //            .HasKey(b => b.Id)
+            //            .HasMany(r => r.Stations)
+            //            .WithMany(s => s.BusRoutes)
+            //            .Map(m => m.MapLeftKey("Station_Id")
+            //                       .MapRightKey("BusRoute_Id")
+            //                       .ToTable("Stations_BusRoutes"));
             modelBuilder.Entity<MapPoint>()
                         .HasKey(m => m.Id)
                         .HasMany(r => r.BusRoutes)
