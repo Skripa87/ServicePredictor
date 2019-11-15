@@ -60,11 +60,13 @@ namespace ServicePredictor
             {
                 Name = busRoute.Name,
                 Id = Guid.NewGuid()
-                         .ToString()
+                         .ToString(),
+                Direction = true
             };
             do
             {
-                splitingBusRoute.MapPoints.Add();
+                splitingBusRoute.MapPoints 
+                                .Add(arrMapPoints[i]);
                 if (i >= count - 2)
                 {
                     break;
@@ -74,7 +76,19 @@ namespace ServicePredictor
                     && MatPart.GaversinusMethod(arrMapPoints[i].Latitude, arrMapPoints[i + 2].Latitude,
                         arrMapPoints[i].Longitude, arrMapPoints[i + 2].Longitude) < 35)
                 {
-
+                    splitingBusRoute.MapPoints
+                                    .Add(arrMapPoints[i + 1]);
+                    result.Add(splitingBusRoute);
+                    splitingBusRoute = new BusRoute()
+                    {
+                        Name = busRoute.Name,
+                        Id = Guid.NewGuid()
+                            .ToString(),
+                        Direction = !result.LastOrDefault()
+                                           ?.Direction ?? false
+                    };
+                    splitingBusRoute.MapPoints.Add(arrMapPoints[i+2]);
+                    i++;
                 }
             } while (true);
             return result;
@@ -107,7 +121,8 @@ namespace ServicePredictor
                 busRoute.MapPoints
                         .ToList()
                         .AddRange(selected?.MapPoints ?? new List<MapPoint>());
-                result.Add(busRoute);
+                var busRoutseAfterSplitOnDirection = SplitForwardBackwardBusRoutes(busRoute);
+                result.AddRange(busRoutseAfterSplitOnDirection);
             }
             dataBaseWorker.SaveBusRoute(result);
             return result;
