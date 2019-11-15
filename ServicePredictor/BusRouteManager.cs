@@ -49,11 +49,41 @@ namespace ServicePredictor
             return busRoutsFirst;
         }
 
+        private static List<BusRoute> SplitForwardBackwardBusRoutes(BusRoute busRoute)
+        {
+            var result = new List<BusRoute>();
+            var arrMapPoints = busRoute.MapPoints
+                                       .ToArray();
+            var i = 0;
+            var count = arrMapPoints.Count()-1;
+            var splitingBusRoute = new BusRoute()
+            {
+                Name = busRoute.Name,
+                Id = Guid.NewGuid()
+                         .ToString()
+            };
+            do
+            {
+                splitingBusRoute.MapPoints.Add();
+                if (i >= count - 2)
+                {
+                    break;
+                }
+                if (MatPart.GaversinusMethod(arrMapPoints[i].Latitude, arrMapPoints[i + 1].Latitude,
+                        arrMapPoints[i].Longitude, arrMapPoints[i + 1].Longitude) > 35
+                    && MatPart.GaversinusMethod(arrMapPoints[i].Latitude, arrMapPoints[i + 2].Latitude,
+                        arrMapPoints[i].Longitude, arrMapPoints[i + 2].Longitude) < 35)
+                {
+
+                }
+            } while (true);
+            return result;
+        }
+        
         public static List<BusRoute> CreateValidBusRoutes(List<BusRouteBuffer> busRoutsBuffer)
         {
             var result = new List<BusRoute>();
             var dataBaseWorker = new DataBaseWorker();
-            var stations = dataBaseWorker.GetStations();
             foreach (var item in busRoutsBuffer)
             {
                 var sum = 0;
@@ -107,17 +137,13 @@ namespace ServicePredictor
         private static double GetTimeOfPredict(int indexFirst, int indexLast, List<MapPoint> mapPoints)
         {
             double resultLength = 0;
-            double speedSummary = 0;
             var arrPoints = mapPoints.ToArray();
             for (int i = indexFirst; i < indexLast; i++)
             {
                 resultLength += MatPart.GaversinusMethod(arrPoints[i].Latitude, arrPoints[i + 1].Latitude,
                                                         arrPoints[i].Longitude, arrPoints[i + 1].Longitude);
-                speedSummary += arrPoints[i].Speed;
             }
-            var speed = speedSummary / Math.Abs(indexLast - indexFirst);
-            speed = speed * 1000 / 3600;
-            return resultLength / speed;
+            return resultLength;
         }
 
         public static Dictionary<string, double> GetAllPredict(FtpDataManager manager, string stationId)
@@ -148,7 +174,6 @@ namespace ServicePredictor
                 var currentBusRoute = busRoutes.Find(b => string.Equals(b.Name, item.BusRouteName));
                 int pointStationInBusRoute = GetIndexPointInBusRoute(currentBusRoute,stationPoint);
                 if (pointStationInBusRoute == -1) continue;
-                
                 foreach (var busCrew in item.BusesBuffer)
                 {
                     busCrew.MapPoints
