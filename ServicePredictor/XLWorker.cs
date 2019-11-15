@@ -74,19 +74,19 @@ namespace ServicePredictor
                 ws.Cell(2, 1).SetValue("Азимут");
                 ws.Cell(2, 3).SetValue("Долгота");
                 ws.Cell(2, 2).SetValue("Широта");
-                ws.Cell(2, 4).SetValue("Остановка");
-                ws.Cell(2, 5).SetValue("Время посещения");
+                //ws.Cell(2, 4).SetValue("Остановка");
+                ws.Cell(2, 4).SetValue("Время посещения");
                 var row = 3;
                 foreach (var item in busRoute.MapPoints)
                 {
                     ws.Cell(row, 1).SetValue(item.Azimut);
                     ws.Cell(row, 2).SetValue(item.Longitude);
                     ws.Cell(row, 3).SetValue(item.Latitude);
-                    ws.Cell(row, 4).SetValue(busRoute.Stations
-                                                           .FirstOrDefault(s => s.Lat.Equals(item.Latitude) 
-                                                                             && s.Lng.Equals(item.Longitude))
-                                                     ?.Name ?? "");
-                    ws.Cell(row, 5).SetValue(item.TimePoint);
+                    //ws.Cell(row, 4).SetValue(busRoute.Stations
+                    //                                       .FirstOrDefault(s => s.Lat.Equals(item.Latitude) 
+                    //                                                         && s.Lng.Equals(item.Longitude))
+                    //                                 ?.Name ?? "");
+                    ws.Cell(row, 4).SetValue(item.TimePoint);
                     row++;
                     if (row <= 64000) continue;
                     numbers++;
@@ -97,8 +97,8 @@ namespace ServicePredictor
                     ws.Cell(2, 1).SetValue($"Азимут");
                     ws.Cell(2, 2).SetValue($"Долгота");
                     ws.Cell(2, 3).SetValue($"Широта");
-                    ws.Cell(2, 4).SetValue($"Остановка");
-                    ws.Cell(2, 5).SetValue($"Время посещения");
+                    //ws.Cell(2, 4).SetValue($"Остановка");
+                    ws.Cell(2, 4).SetValue($"Время посещения");
                     row = 3;
                 }
                 ws.Columns().AdjustToContents();
