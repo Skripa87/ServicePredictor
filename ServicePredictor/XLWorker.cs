@@ -63,6 +63,8 @@ namespace ServicePredictor
         {
             var workbook = new XLWorkbook();
             var numbers = 0;
+            var dbWorker = new DataBaseWorker();
+            var stations = dbWorker.GetStations();
             foreach (var busRoute in busRoutes)
             {
                 numbers++;
@@ -71,21 +73,20 @@ namespace ServicePredictor
                 var range = ws.Range(1, 1, 1, 15);
                 range.Merge();
                 range.SetValue($"Маршрут номер = {busRoute.Name}");
-                ws.Cell(2, 1).SetValue("Азимут");
+                ws.Cell(2, 1).SetValue($"Направление {(busRoute.Direction ? "Прямое" : "Обратное")}");
                 ws.Cell(2, 3).SetValue("Долгота");
                 ws.Cell(2, 2).SetValue("Широта");
-                //ws.Cell(2, 4).SetValue("Остановка");
+                ws.Cell(2, 5).SetValue("Остановка");
                 ws.Cell(2, 4).SetValue("Время посещения");
                 var row = 3;
                 foreach (var item in busRoute.MapPoints)
                 {
-                    ws.Cell(row, 1).SetValue(item.Azimut);
+                    ws.Cell(row, 1)
+                      .SetValue(item.Azimut);
                     ws.Cell(row, 2).SetValue(item.Longitude);
                     ws.Cell(row, 3).SetValue(item.Latitude);
-                    //ws.Cell(row, 4).SetValue(busRoute.Stations
-                    //                                       .FirstOrDefault(s => s.Lat.Equals(item.Latitude) 
-                    //                                                         && s.Lng.Equals(item.Longitude))
-                    //                                 ?.Name ?? "");
+                    var name = stations.Find(s => MatPart.GaversinusMethod(s.Lat,item.Latitude, s.Lng, item.Longitude) < 35)?.Name ?? "";
+                    ws.Cell(row, 5).SetValue(name);
                     ws.Cell(row, 4).SetValue(item.TimePoint);
                     row++;
                     if (row <= 64000) continue;
@@ -97,7 +98,7 @@ namespace ServicePredictor
                     ws.Cell(2, 1).SetValue($"Азимут");
                     ws.Cell(2, 2).SetValue($"Долгота");
                     ws.Cell(2, 3).SetValue($"Широта");
-                    //ws.Cell(2, 4).SetValue($"Остановка");
+                    ws.Cell(2, 5).SetValue($"Остановка");
                     ws.Cell(2, 4).SetValue($"Время посещения");
                     row = 3;
                 }

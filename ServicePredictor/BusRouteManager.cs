@@ -49,47 +49,50 @@ namespace ServicePredictor
             return busRoutsFirst;
         }
 
-        private static List<BusRoute> SplitForwardBackwardBusRoutes(BusRoute busRoute)
+        private static BusRoute[] SplitForwardBackwardBusRoutes(BusRoute busRoute)
         {
-            var result = new List<BusRoute>();
-            var arrMapPoints = busRoute.MapPoints
-                                       .ToArray();
-            var i = 0;
-            var count = arrMapPoints.Count()-1;
-            var splitingBusRoute = new BusRoute()
+            var result = new BusRoute[]{new BusRoute()
             {
                 Name = busRoute.Name,
+                Active = true, 
                 Id = Guid.NewGuid()
                          .ToString(),
                 Direction = true
-            };
+            },new BusRoute()
+            {
+                Name = busRoute.Name,
+                Active = true,
+                Id = Guid.NewGuid()
+                    .ToString(),
+                Direction = false
+            }};
+            if (!busRoute.MapPoints.Any()) return result;
+            var arrMapPoints = busRoute.MapPoints
+                                       .ToArray();
+            var i = 0;
+            var currentPath = 0;
+            var count = arrMapPoints.Count()-1;
             do
             {
-                splitingBusRoute.MapPoints 
-                                .Add(arrMapPoints[i]);
+                result[currentPath].MapPoints
+                                   .Add(arrMapPoints[i]);
                 if (i >= count - 2)
                 {
                     break;
                 }
                 if (MatPart.GaversinusMethod(arrMapPoints[i].Latitude, arrMapPoints[i + 1].Latitude,
-                        arrMapPoints[i].Longitude, arrMapPoints[i + 1].Longitude) > 35
+                        arrMapPoints[i].Longitude, arrMapPoints[i + 1].Longitude) > 30
                     && MatPart.GaversinusMethod(arrMapPoints[i].Latitude, arrMapPoints[i + 2].Latitude,
-                        arrMapPoints[i].Longitude, arrMapPoints[i + 2].Longitude) < 35)
+                        arrMapPoints[i].Longitude, arrMapPoints[i + 2].Longitude) < 30)
                 {
-                    splitingBusRoute.MapPoints
-                                    .Add(arrMapPoints[i + 1]);
-                    result.Add(splitingBusRoute);
-                    splitingBusRoute = new BusRoute()
-                    {
-                        Name = busRoute.Name,
-                        Id = Guid.NewGuid()
-                            .ToString(),
-                        Direction = !result.LastOrDefault()
-                                           ?.Direction ?? false
-                    };
-                    splitingBusRoute.MapPoints.Add(arrMapPoints[i+2]);
-                    i++;
+                    result[currentPath].MapPoints
+                                       .Add(arrMapPoints[i + 1]);
+                    currentPath = currentPath == 0
+                                ? 1
+                                : 0;
+                    result[currentPath].MapPoints.Add(arrMapPoints[i+2]);
                 }
+                i++;
             } while (true);
             return result;
         }
@@ -118,9 +121,11 @@ namespace ServicePredictor
                     Name = item.BusRouteName,
                     Active = true
                 };
-                busRoute.MapPoints
-                        .ToList()
-                        .AddRange(selected?.MapPoints ?? new List<MapPoint>());
+                foreach (var adedetItem in selected?.MapPoints ?? new List<MapPoint>())
+                {
+                    busRoute.MapPoints
+                            .Add(adedetItem);
+                }
                 var busRoutseAfterSplitOnDirection = SplitForwardBackwardBusRoutes(busRoute);
                 result.AddRange(busRoutseAfterSplitOnDirection);
             }
