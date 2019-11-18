@@ -98,7 +98,7 @@ namespace ServicePredictor.Models
 
         public bool Equals(BusInformation other)
         {
-            return other != null && (other.CarNumber == CarNumber); // && other.Sheduler==Sheduler && other.Turn==Turn);
+            return other != null && (other.CarNumber == CarNumber);
         }
 
         public override int GetHashCode()

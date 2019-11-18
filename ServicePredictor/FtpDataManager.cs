@@ -97,6 +97,7 @@ namespace ServicePredictor
                         if (!buses.Contains(busInformation))
                         {
                             busInformation.InsertPoint(latitude,longitude,timenav,azimuth,speed);
+                            buses.Add(busInformation);
                         }
                         else
                         {
@@ -149,8 +150,7 @@ namespace ServicePredictor
 
         public List<BusRoute> GetData()
         {
-            var resultBuffer = new List<BusRouteBuffer>();
-            var result = new List<BusRoute>();
+            var busesInformation = new List<BusInformation>();
             var targetDate = DateTime.Now
                                      .AddDays(-1)
                                      .AddHours(-1 * DateTime.Now.Hour)
@@ -172,13 +172,10 @@ namespace ServicePredictor
                                     + current.ToString("HH") + "_"
                                     + current.ToString("mm") + ".xml";
                 var preResult = GetPartData(fileName);
-                resultBuffer = BusRouteManager.AttachBusRoutes(resultBuffer, preResult);
+                busesInformation = BusRouteManager.AttachBusRoutes(busesInformation, preResult);
                 current = current.AddMinutes(1);
             }
-            var xlwr = new XlWorker("d://new_table.xlsx");
-            xlwr.CreateXlDocument(resultBuffer);
-            result = BusRouteManager.CreateValidBusRoutes(resultBuffer);
-            return result;
+            return BusRouteManager.CreateValidBusRoutes(busesInformation);
         }
 
         public FtpDataManager(string ftpPath, string user, string password)

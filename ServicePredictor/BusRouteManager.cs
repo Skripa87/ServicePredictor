@@ -8,45 +8,50 @@ namespace ServicePredictor
 {
     public static class BusRouteManager
     {
-        public static List<BusRouteBuffer> AttachBusRoutes(List<BusRouteBuffer> busRoutsFirst, List<BusRouteBuffer> busRoutsSecond)
+        public static List<BusInformation> AttachBusRoutes(List<BusInformation> busInformationFirst, List<BusInformation> busInformationSecond)
         {
-            if (busRoutsFirst == null && busRoutsSecond != null) return busRoutsSecond;
-            if (busRoutsFirst != null && busRoutsSecond == null) return busRoutsFirst;
-            if (busRoutsFirst == null) return new List<BusRouteBuffer>();
-            foreach (var item in busRoutsSecond)
+            if (busInformationFirst == null && busInformationSecond != null) return busInformationSecond;
+            if (busInformationFirst != null && busInformationSecond == null) return busInformationFirst;
+            if (busInformationFirst == null) return new List<BusInformation>();
+            foreach (var item in busInformationSecond)
             {
-                if (!busRoutsFirst.Contains(item))
+                if (!busInformationFirst.Contains(item))
                 {
-                    busRoutsFirst.Add(item);
+                    busInformationFirst.Add(item);
                 }
                 else
                 {
-                    var busRouteFinder = busRoutsFirst.Find(f => string.Equals(f.BusRouteName, item.BusRouteName));
-                    var busRouteFinderIndex = busRoutsFirst.IndexOf(busRouteFinder);
-                    foreach (var crew in item.BusesBuffer)
-                    {
-                        if (!busRoutsFirst.ElementAt(busRouteFinderIndex)
-                                                .BusesBuffer
-                                                .Contains(crew))
-                        {
-                            busRoutsFirst.ElementAt(busRouteFinderIndex)
-                                                .BusesBuffer
-                                                .Add(crew);
-                        }
-                        else
-                        {
-                            var crewFinderIndex = busRoutsFirst.ElementAt(busRouteFinderIndex)
-                                                                      .BusesBuffer
-                                                                      .IndexOf(crew);
-                            busRoutsFirst.ElementAt(busRouteFinderIndex)
-                                                .BusesBuffer
-                                                .ElementAt(crewFinderIndex)
-                                                .InsertPoints(crew.MapPoints);
-                        }
-                    }
+                    busInformationFirst.Find(b=>b.CarNumber == item.CarNumber)
+                                       .InsertPoints(item.MapPoints);
+
+                    
+                    
+                    //var busRouteFinder = busRoutsFirst.Find(f => string.Equals(f.BusRouteName, item.BusRouteName));
+                    //var busRouteFinderIndex = busRoutsFirst.IndexOf(busRouteFinder);
+                    //foreach (var crew in item.BusesBuffer)
+                    //{
+                    //    if (!busRoutsFirst.ElementAt(busRouteFinderIndex)
+                    //                            .BusesBuffer
+                    //                            .Contains(crew))
+                    //    {
+                    //        busRoutsFirst.ElementAt(busRouteFinderIndex)
+                    //                            .BusesBuffer
+                    //                            .Add(crew);
+                    //    }
+                    //    else
+                    //    {
+                    //        var crewFinderIndex = busRoutsFirst.ElementAt(busRouteFinderIndex)
+                    //                                                  .BusesBuffer
+                    //                                                  .IndexOf(crew);
+                    //        busRoutsFirst.ElementAt(busRouteFinderIndex)
+                    //                            .BusesBuffer
+                    //                            .ElementAt(crewFinderIndex)
+                    //                            .InsertPoints(crew.MapPoints);
+                    //    }
+                    //}
                 }
             }
-            return busRoutsFirst;
+            return busInformationFirst;
         }
 
         private static BusRoute[] SplitForwardBackwardBusRoutes(BusRoute busRoute)
@@ -97,19 +102,27 @@ namespace ServicePredictor
             return result;
         }
         
-        public static List<BusRoute> CreateValidBusRoutes(List<BusRouteBuffer> busRoutsBuffer)
+        public static List<BusRoute> CreateValidBusRoutes(List<BusInformation> busesInformation)
         {
             var result = new List<BusRoute>();
-            var dataBaseWorker = new DataBaseWorker();
-            foreach (var item in busRoutsBuffer)
+            var buses = new List<BusInformation>();
+            foreach (var bus in busesInformation)
             {
+                buses.Add(bus);
+            }
+            var dataBaseWorker = new DataBaseWorker();
+            var routeName = buses.First()
+                                 .RouteName;
+            do
+            {
+                var buffer = buses.FindAll(b => string.Equals(b.RouteName, routeName));
                 var sum = 0;
                 BusInformation selected = null;
-                foreach (var bus in item.BusesBuffer)
+                foreach (var bus in buffer)
                 {
-                    var correctSum = item.BusesBuffer
-                                         .Select(s => bus.SimilarityCount(s))
-                                         .Sum();
+                    var correctSum = buffer
+                        .Select(s => bus.SimilarityCount(s))
+                        .Sum();
                     if (correctSum <= sum) continue;
                     selected = bus;
                     sum = correctSum;
@@ -117,18 +130,21 @@ namespace ServicePredictor
                 var busRoute = new BusRoute()
                 {
                     Id = Guid.NewGuid()
-                             .ToString(),
-                    Name = item.BusRouteName,
+                        .ToString(),
+                    Name = routeName,
                     Active = true
                 };
                 foreach (var adedetItem in selected?.MapPoints ?? new List<MapPoint>())
                 {
                     busRoute.MapPoints
-                            .Add(adedetItem);
+                        .Add(adedetItem);
                 }
+                buses.RemoveAll(r => string.Equals(r.RouteName, routeName));
+                routeName = buses.FirstOrDefault()
+                                ?.RouteName;
                 var busRoutseAfterSplitOnDirection = SplitForwardBackwardBusRoutes(busRoute);
                 result.AddRange(busRoutseAfterSplitOnDirection);
-            }
+            } while (buses.Count > 0);
             dataBaseWorker.SaveBusRoute(result);
             return result;
         }
@@ -189,21 +205,21 @@ namespace ServicePredictor
                                 + current.ToString("HH") + "_"
                                 + current.ToString("mm") + ".xml";
             var baseRouteData = manager.GetPartData(fileName);
-            foreach (var item in baseRouteData)
-            {
-                var currentBusRoute = busRoutes.Find(b => string.Equals(b.Name, item.BusRouteName));
-                int pointStationInBusRoute = GetIndexPointInBusRoute(currentBusRoute,stationPoint);
-                if (pointStationInBusRoute == -1) continue;
-                foreach (var busCrew in item.BusesBuffer)
-                {
-                    busCrew.MapPoints
-                           .Sort();
-                    var index = GetIndexPointInBusRoute(currentBusRoute, busCrew.MapPoints
-                                                                                     .Last());
-                    result.Add(item.BusRouteName + busCrew.CarNumber,GetTimeOfPredict(index,pointStationInBusRoute,currentBusRoute.MapPoints
-                                                                                                                                                  .ToList()));
-                }
-            }
+            //foreach (var item in baseRouteData)
+            //{
+            //    var currentBusRoute = busRoutes.Find(b => string.Equals(b.Name, item.BusRouteName));
+            //    int pointStationInBusRoute = GetIndexPointInBusRoute(currentBusRoute,stationPoint);
+            //    if (pointStationInBusRoute == -1) continue;
+            //    foreach (var busCrew in item.BusesBuffer)
+            //    {
+            //        busCrew.MapPoints
+            //               .Sort();
+            //        var index = GetIndexPointInBusRoute(currentBusRoute, busCrew.MapPoints
+            //                                                                         .Last());
+            //        result.Add(item.BusRouteName + busCrew.CarNumber,GetTimeOfPredict(index,pointStationInBusRoute,currentBusRoute.MapPoints
+            //                                                                                                                                      .ToList()));
+            //    }
+            //}
             return result;
         }
     }
