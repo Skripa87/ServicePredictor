@@ -104,7 +104,7 @@ namespace ServicePredictor
             foreach (var item in busRoutsBuffer)
             {
                 var sum = 0;
-                BusCrew selected = null;
+                BusInformation selected = null;
                 foreach (var bus in item.BusesBuffer)
                 {
                     var correctSum = item.BusesBuffer

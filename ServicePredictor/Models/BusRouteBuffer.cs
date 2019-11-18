@@ -8,14 +8,14 @@ namespace ServicePredictor.Models
     public class BusRouteBuffer:IEquatable<BusRouteBuffer>
     {
         public string BusRouteName { get; set; }
-        public List<BusCrew> BusesBuffer { get; set; }
+        public List<BusInformation> BusesBuffer { get; set; }
 
         public BusRouteBuffer(string nameBusRoute)
         {
             BusRouteName = nameBusRoute;
-            BusesBuffer = new List<BusCrew>();
+            BusesBuffer = new List<BusInformation>();
         }
-        public void InsertBuses(BusCrew busCrew)
+        public void InsertBuses(BusInformation busCrew)
         {
             if (!BusesBuffer.Contains(busCrew) || BusesBuffer.Count == 0) 
             {

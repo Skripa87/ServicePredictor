@@ -3,15 +3,16 @@ using System.Collections.Generic;
 
 namespace ServicePredictor.Models
 {
-    public class BusCrew:IEquatable<BusCrew>
+    public class BusInformation:IEquatable<BusInformation>
     {
         public string Id { get; }
         public int CarNumber { get;}
         public int Turn { get;}
         public int Sheduler { get;}
+        public string RouteName { get; set; }
         public List<MapPoint> MapPoints { get; }
         
-        public BusCrew(string carNumber, string turn, string sheduler) 
+        public BusInformation(string carNumber, string turn, string sheduler,  string routeName) 
         {
             Id = Guid.NewGuid()
                      .ToString();
@@ -24,10 +25,11 @@ namespace ServicePredictor.Models
             Sheduler = int.TryParse(sheduler, out var shedulerNum)
                      ? shedulerNum
                      : -1;
+            RouteName = routeName;
             MapPoints = new List<MapPoint>();
         }
         
-        public int SimilarityCount(BusCrew other)
+        public int SimilarityCount(BusInformation other)
         {
             var result = 0;
             MapPoints.Sort();
@@ -94,7 +96,7 @@ namespace ServicePredictor.Models
             }
         }
 
-        public bool Equals(BusCrew other)
+        public bool Equals(BusInformation other)
         {
             return other != null && (other.CarNumber == CarNumber); // && other.Sheduler==Sheduler && other.Turn==Turn);
         }
