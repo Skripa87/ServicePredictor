@@ -146,9 +146,11 @@ namespace ServicePredictor
                 };
                 foreach (var adedetItem in selected?.MapPoints ?? new List<MapPoint>())
                 {
-                    if(CheckPowerPointInThisRoute(availebleBusInformationList,adedetItem) > countInfo)
-                    busRoute.MapPoints
+                    if (CheckPowerPointInThisRoute(availebleBusInformationList, adedetItem) > countInfo)
+                    {
+                        busRoute.MapPoints
                             .Add(adedetItem);
+                    }
                 }
                 buses.RemoveAll(r => string.Equals(r.RouteName, routeName));
                 routeName = buses.FirstOrDefault()
