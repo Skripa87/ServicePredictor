@@ -102,20 +102,22 @@ namespace ServicePredictor
             return result;
         }
 
-        private static int CheckPowerPointInThisRoute(List<BusInformation> busesInformation, MapPoint mapPoint)
+        private static bool CheckPowerPointInThisRoute(List<BusInformation> busesInformation, MapPoint mapPoint, double sufficientCondition)
         {
-            return busesInformation.Select(b => b.MapPoints.Contains(mapPoint))
-                                   .Count();
+            var result = 0;
+            foreach (var busInfo in busesInformation)
+            {
+                result += (busInfo.MapPoints
+                                  .Contains(mapPoint) ? 1 : 0);
+                if (result >= sufficientCondition) return true;
+            }
+            return false;
         }
 
         public static List<BusRoute> CreateValidBusRoutes(List<BusInformation> busesInformation)
         {
             var result = new List<BusRoute>();
             var buses = new List<BusInformation>();
-            var avOfBusPoints = (busesInformation.Select(b => b.MapPoints.Count)
-                                                 .Sum())/(busesInformation.Count);
-            var countInfo = ((busesInformation.Count) / 100) * 55;
-            var availebleBusInformationList = busesInformation.FindAll(f => f.MapPoints.Count > avOfBusPoints);
             foreach (var bus in busesInformation)
             {
                 buses.Add(bus);
@@ -126,6 +128,9 @@ namespace ServicePredictor
             do
             {
                 var buffer = buses.FindAll(b => string.Equals(b.RouteName, routeName));
+                var avOfBusPoints = (buffer.Select(b => b.MapPoints.Count).Sum()) / (buffer.Count);
+                var availebleBusInformationList = buffer.FindAll(f => f.MapPoints.Count > avOfBusPoints);
+                var countInfo = ((buffer.Count) / 100) * 35;
                 var sum = 0;
                 BusInformation selected = null;
                 foreach (var bus in buffer)
@@ -146,7 +151,7 @@ namespace ServicePredictor
                 };
                 foreach (var adedetItem in selected?.MapPoints ?? new List<MapPoint>())
                 {
-                    if (CheckPowerPointInThisRoute(availebleBusInformationList, adedetItem) > countInfo)
+                    if (CheckPowerPointInThisRoute(availebleBusInformationList, adedetItem, countInfo))
                     {
                         busRoute.MapPoints
                             .Add(adedetItem);

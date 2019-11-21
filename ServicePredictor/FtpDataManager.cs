@@ -174,7 +174,7 @@ namespace ServicePredictor
                 var preResult = GetPartData(fileName);
                 busesInformation = BusRouteManager.AttachBusRoutes(busesInformation, preResult);
                 current = current.AddMinutes(1);
-            }
+             }
             return BusRouteManager.CreateValidBusRoutes(busesInformation);
         }
 
