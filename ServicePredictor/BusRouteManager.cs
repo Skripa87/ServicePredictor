@@ -101,11 +101,21 @@ namespace ServicePredictor
             } while (true);
             return result;
         }
-        
+
+        private static int CheckPowerPointInThisRoute(List<BusInformation> busesInformation, MapPoint mapPoint)
+        {
+            return busesInformation.Select(b => b.MapPoints.Contains(mapPoint))
+                                   .Count();
+        }
+
         public static List<BusRoute> CreateValidBusRoutes(List<BusInformation> busesInformation)
         {
             var result = new List<BusRoute>();
             var buses = new List<BusInformation>();
+            var avOfBusPoints = (busesInformation.Select(b => b.MapPoints.Count)
+                                                 .Sum())/(busesInformation.Count);
+            var countInfo = ((busesInformation.Count) / 100) * 55;
+            var availebleBusInformationList = busesInformation.FindAll(f => f.MapPoints.Count > avOfBusPoints);
             foreach (var bus in busesInformation)
             {
                 buses.Add(bus);
@@ -136,8 +146,9 @@ namespace ServicePredictor
                 };
                 foreach (var adedetItem in selected?.MapPoints ?? new List<MapPoint>())
                 {
+                    if(CheckPowerPointInThisRoute(availebleBusInformationList,adedetItem) > countInfo)
                     busRoute.MapPoints
-                        .Add(adedetItem);
+                            .Add(adedetItem);
                 }
                 buses.RemoveAll(r => string.Equals(r.RouteName, routeName));
                 routeName = buses.FirstOrDefault()
