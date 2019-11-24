@@ -36,8 +36,10 @@ namespace ServicePredictor
             if (busRoutes == null || busRoutes.Count == 0) return;
             foreach (var item in busRoutes)
             {
-                var current = Db.BusRoutes.Where(s => s.Name.Equals(item.Name))
-                                          .FirstOrDefault();
+                var current = Db.BusRoutes.Any()
+                            ? Db.BusRoutes
+                                .FirstOrDefault(s => s.Name.Equals(item.Name))
+                            :null;
                 if (current != null)
                 {
                     current.Active = false;
