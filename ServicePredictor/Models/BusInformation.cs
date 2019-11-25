@@ -32,23 +32,49 @@ namespace ServicePredictor.Models
         public int SimilarityCount(BusInformation other)
         {
             var result = 0;
-            MapPoints.Sort();
-            var arrMapPoint = MapPoints.ToArray();
-            other.MapPoints
-                 .Sort();
-            var otherArrMapPoints = other.MapPoints
-                                         .ToArray();
-            var count = MapPoints.Count > other.MapPoints
-                                               .Count
-                      ? other.MapPoints
-                             .Count
-                      : MapPoints.Count;
-            for(int i = 0; i < count; i++)
+            var countSelfPoint = MapPoints.Count;
+            var countOtherPoint = other.MapPoints
+                                       .Count;
+           //var count = countSelfPoint > countOtherPoint 
+            //          ? countOtherPoint 
+            //          : countSelfPoint;
+            var procentRange = countOtherPoint / 100 * 5;
+            var k = (int) (countOtherPoint / countSelfPoint);
+            
+            for (int iterator=0;iterator<countSelfPoint;iterator++)
             {
-                result += otherArrMapPoints[i].Equals(arrMapPoint[i])
-                          ? 1
-                          : 0; 
+                var startK = k*iterator - procentRange < 0
+                    ? 0
+                    : k*iterator - procentRange;
+                var endK = k*iterator + procentRange > other.MapPoints.Count - 1
+                    ? other.MapPoints.Count - 1
+                    : k*iterator + procentRange; 
+                for (int i = startK; i < endK; i++)
+                {
+                    if (MapPoints[iterator].Equals(other.MapPoints[i]))
+                    {
+                        result++;
+                        break;
+                    }
+                }
             }
+            //MapPoints.Sort();
+            //var arrMapPoint = MapPoints.ToArray();
+            //other.MapPoints
+            //     .Sort();
+            //var otherArrMapPoints = other.MapPoints
+            //                             .ToArray();
+            //var count = MapPoints.Count > other.MapPoints
+            //                                   .Count
+            //          ? other.MapPoints
+            //                 .Count
+            //          : MapPoints.Count;
+            //for(int i = 0; i < count; i++)
+            //{
+            //    result += otherArrMapPoints[i].Equals(arrMapPoint[i])
+            //              ? 1
+            //              : 0; 
+            //}
             return result;
         }
 
