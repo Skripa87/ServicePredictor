@@ -37,8 +37,10 @@ namespace ServicePredictor
                 ws.Cell(2, 6).SetValue("Секунды");
                 ws.Cell(2, 7).SetValue("Азимут");//("Остановка");
                 ws.Cell(2, 8).SetValue("Скорость");//("Остановка");
+                ws.Cell(2, 9).SetValue("Позиция");
                 var row = 3;
-                foreach (var item in busRoute.MapPoints)
+                var list = busRoute.MapPoints.ToList();
+                foreach (var item in list)
                 {
                     ws.Cell(row, 1)
                       .SetValue(busRoute.Name);
@@ -51,6 +53,7 @@ namespace ServicePredictor
                     ws.Cell(row, 6).SetValue(item.TimePoint.ToString("ss"));
                     ws.Cell(row, 7).SetValue(item.Azimut);
                     ws.Cell(row, 8).SetValue(item.Speed);
+                    ws.Cell(row, 9).SetValue(list.IndexOf(item));
                     row++;
                     if (row <= 64000) continue;
                     numbers++;
@@ -66,6 +69,7 @@ namespace ServicePredictor
                     ws.Cell(2, 6).SetValue("Секунды");
                     ws.Cell(2, 7).SetValue("Азимут");//("Остановка");
                     ws.Cell(2, 8).SetValue("Скорость");//("Остановка");
+                    ws.Cell(2, 9).SetValue("Позиция");
                     row = 3;
                 }
                 ws.Columns().AdjustToContents();

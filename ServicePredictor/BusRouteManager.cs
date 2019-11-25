@@ -102,20 +102,47 @@ namespace ServicePredictor
             return result;
         }
 
-        private static int CheckPowerPointInThisRoute(List<BusInformation> busesInformation, MapPoint mapPoint)
+        private static bool CheckPowerPointInThisRoute(List<BusInformation> busesInformation, MapPoint mapPoint, int pos, int countMapInValidRoute, double sufficientCondition)
         {
-            return busesInformation.Select(b => b.MapPoints.Contains(mapPoint))
-                                   .Count();
+            var result = 0;
+            foreach (var busInfo in busesInformation)
+            {
+                var count = busInfo.MapPoints.Count();
+                var deltaCount = (int)((count / 100) * 5);
+                var position = ((int) (pos * count / countMapInValidRoute));
+                int startPos = 0, endPos = 0;
+                //if (position > deltaCount)
+                //{
+                //    startPos = position  >  deltaCount;
+                //    endPos = position + deltaCount;
+                //}
+                //else
+                //{
+                    startPos = position > deltaCount 
+                             ? position - deltaCount 
+                             : 0;
+                    endPos = (position + deltaCount) > busInfo.MapPoints.Count
+                           ? busInfo.MapPoints.Count
+                           : position + deltaCount;
+                for (var i = startPos; i < endPos; i++)
+                {
+                    if (busInfo.MapPoints[i].Equals(mapPoint))
+                    {
+                        result++;
+                        break;
+                    }
+                }
+                //result += (busInfo.MapPoints
+                  //                .Contains(mapPoint) ? 1 : 0);
+                if (result >= sufficientCondition) return true;
+            }
+            return false;
         }
 
         public static List<BusRoute> CreateValidBusRoutes(List<BusInformation> busesInformation)
         {
             var result = new List<BusRoute>();
             var buses = new List<BusInformation>();
-            var avOfBusPoints = (busesInformation.Select(b => b.MapPoints.Count)
-                                                 .Sum())/(busesInformation.Count);
-            var countInfo = ((busesInformation.Count) / 100) * 55;
-            var availebleBusInformationList = busesInformation.FindAll(f => f.MapPoints.Count > avOfBusPoints);
             foreach (var bus in busesInformation)
             {
                 buses.Add(bus);
@@ -126,6 +153,9 @@ namespace ServicePredictor
             do
             {
                 var buffer = buses.FindAll(b => string.Equals(b.RouteName, routeName));
+                var avOfBusPoints = (buffer.Select(b => b.MapPoints.Count).Sum()) / (buffer.Count);
+                var availebleBusInformationList = buffer.FindAll(f => f.MapPoints.Count > avOfBusPoints);
+                var countInfo = ((buffer.Count) / 100) * 55;
                 var sum = 0;
                 BusInformation selected = null;
                 foreach (var bus in buffer)
@@ -144,19 +174,26 @@ namespace ServicePredictor
                     Name = routeName,
                     Active = true
                 };
-                foreach (var adedetItem in selected?.MapPoints ?? new List<MapPoint>())
+                var list = selected?.MapPoints ?? new List<MapPoint>();
+                foreach (var adedetItem in list)
                 {
-                    if (CheckPowerPointInThisRoute(availebleBusInformationList, adedetItem) > countInfo)
+                    var pos = list.IndexOf(adedetItem);
+                    if (CheckPowerPointInThisRoute(availebleBusInformationList, adedetItem, pos,list.Count, countInfo))
                     {
                         busRoute.MapPoints
-                            .Add(adedetItem);
+                                .Add(adedetItem);
                     }
                 }
                 buses.RemoveAll(r => string.Equals(r.RouteName, routeName));
                 routeName = buses.FirstOrDefault()
                                 ?.RouteName;
-                var busRoutseAfterSplitOnDirection = SplitForwardBackwardBusRoutes(busRoute);
-                result.AddRange(busRoutseAfterSplitOnDirection);
+                var busRoutsAfterSplitOnDirection = SplitForwardBackwardBusRoutes(busRoute);
+                var busRoutsDirectionList = busRoutsAfterSplitOnDirection.ToList();
+                busRoutsDirectionList.RemoveAll(b => b.MapPoints.Count == 0);
+                if (busRoutsDirectionList.Count > 0)
+                {
+                    result.AddRange(busRoutsDirectionList);
+                }
             } while (buses.Count > 0);
             dataBaseWorker.SaveBusRoute(result);
             return result;
