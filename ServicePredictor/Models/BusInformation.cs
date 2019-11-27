@@ -35,9 +35,6 @@ namespace ServicePredictor.Models
             var countSelfPoint = MapPoints.Count;
             var countOtherPoint = other.MapPoints
                                        .Count;
-           //var count = countSelfPoint > countOtherPoint 
-            //          ? countOtherPoint 
-            //          : countSelfPoint;
             var procentRange = countOtherPoint / 100 * 5;
             var k = (int) (countOtherPoint / countSelfPoint);
             
@@ -58,23 +55,6 @@ namespace ServicePredictor.Models
                     }
                 }
             }
-            //MapPoints.Sort();
-            //var arrMapPoint = MapPoints.ToArray();
-            //other.MapPoints
-            //     .Sort();
-            //var otherArrMapPoints = other.MapPoints
-            //                             .ToArray();
-            //var count = MapPoints.Count > other.MapPoints
-            //                                   .Count
-            //          ? other.MapPoints
-            //                 .Count
-            //          : MapPoints.Count;
-            //for(int i = 0; i < count; i++)
-            //{
-            //    result += otherArrMapPoints[i].Equals(arrMapPoint[i])
-            //              ? 1
-            //              : 0; 
-            //}
             return result;
         }
 
